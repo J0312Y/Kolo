@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context';
-import { Home, Circles, Wallet, Card, Profile } from '../pages';
+import { Home, Circles, Wallet, Card, Profile, Login, Register, VerifyEmail } from '../pages';
 import { BottomNavigation } from '../components/layout';
 
 // Protected Route wrapper
@@ -53,9 +53,10 @@ export const AppRoutes: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Auth routes will be added here */}
-        {/* <Route path="/login" element={<Login />} /> */}
-        {/* <Route path="/register" element={<Register />} /> */}
+        {/* Public auth routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         {/* Protected routes */}
         <Route
