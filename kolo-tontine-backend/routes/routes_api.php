@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\GoalController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -135,9 +136,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/transactions/filter/{type}', [TransactionController::class, 'filterByType']);
     Route::get('/transactions/date-range', [TransactionController::class, 'getByDateRange']);
     
+    // Dashboard
+    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
+
     // Financial Dashboard
     Route::get('/dashboard/financial', [TransactionController::class, 'getFinancialDashboard']);
-    Route::get('/dashboard/stats', [TransactionController::class, 'getStatistics']);
     
     // ============================================
     // REFERRALS
