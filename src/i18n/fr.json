@@ -1,0 +1,85 @@
+{
+  "navigation": {
+    "home": "Accueil",
+    "circles": "Cercles",
+    "wallet": "Portefeuille",
+    "card": "Carte",
+    "profile": "Profil"
+  },
+  "home": {
+    "welcomeBack": "Content de vous revoir",
+    "totalBalance": "Solde Total",
+    "activeCircles": "Cercles Actifs",
+    "completedCircles": "Terminés",
+    "nextPayout": "Prochain Paiement",
+    "quickActions": "Actions Rapides",
+    "joinCircle": "Rejoindre un Cercle",
+    "createCircle": "Créer un Cercle",
+    "inviteFriends": "Inviter des amis",
+    "exploreGoals": "Explorer les Objectifs",
+    "myGoals": "Mes Objectifs",
+    "smartSaving": "Épargne intelligente avec frais réduits",
+    "zeroFees": "Zéro frais, épargne maximale"
+  },
+  "circles": {
+    "myCircles": "Mes Cercles",
+    "active": "Actifs",
+    "finished": "Terminés",
+    "members": "Membres",
+    "monthlyContribution": "Contribution Mensuelle",
+    "nextPayment": "Prochain Paiement",
+    "viewDetails": "Voir Détails",
+    "circleDetails": "Détails du Cercle",
+    "payNow": "Payer Maintenant",
+    "chatWithMembers": "Discuter avec les Membres"
+  },
+  "wallet": {
+    "balance": "Solde",
+    "transactions": "Transactions",
+    "deposit": "Dépôt",
+    "withdraw": "Retrait",
+    "sendMoney": "Envoyer de l'Argent"
+  },
+  "profile": {
+    "personalInfo": "Informations Personnelles",
+    "manageAddresses": "Gérer les Adresses",
+    "language": "Langue",
+    "security": "Sécurité",
+    "support": "Assistance",
+    "settings": "Paramètres",
+    "logout": "Déconnexion"
+  },
+  "addresses": {
+    "savedAddresses": "Adresses Enregistrées",
+    "addAddress": "Ajouter une Adresse",
+    "home_address": "Domicile",
+    "work_address": "Travail",
+    "streetAddress": "Adresse",
+    "city": "Ville",
+    "postalCode": "Code Postal (BP)",
+    "country": "Pays",
+    "setAsDefault": "Définir par défaut"
+  },
+  "language": {
+    "chooseLanguage": "Choisissez votre langue préférée",
+    "languageChange": "Changement de Langue",
+    "languageChangeDesc": "Le changement de langue mettra à jour tout le texte de l'application immédiatement."
+  },
+  "buttons": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "continue": "Continuer",
+    "done": "Terminé"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "comingSoon": "Bientôt Disponible"
+  }
+}

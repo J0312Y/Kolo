@@ -1,0 +1,85 @@
+{
+  "navigation": {
+    "home": "Home",
+    "circles": "Circles",
+    "wallet": "Wallet",
+    "card": "Card",
+    "profile": "Profile"
+  },
+  "home": {
+    "welcomeBack": "Welcome back",
+    "totalBalance": "Total Balance",
+    "activeCircles": "Active Circles",
+    "completedCircles": "Completed",
+    "nextPayout": "Next Payout",
+    "quickActions": "Quick Actions",
+    "joinCircle": "Join a Circle",
+    "createCircle": "Create Circle",
+    "inviteFriends": "Invite friends",
+    "exploreGoals": "Explore Goals",
+    "myGoals": "My Goals",
+    "smartSaving": "Smart saving with low fees",
+    "zeroFees": "Zero fees, maximum savings"
+  },
+  "circles": {
+    "myCircles": "My Circles",
+    "active": "Active",
+    "finished": "Finished",
+    "members": "Members",
+    "monthlyContribution": "Monthly Contribution",
+    "nextPayment": "Next Payment",
+    "viewDetails": "View Details",
+    "circleDetails": "Circle Details",
+    "payNow": "Pay Now",
+    "chatWithMembers": "Chat with Members"
+  },
+  "wallet": {
+    "balance": "Balance",
+    "transactions": "Transactions",
+    "deposit": "Deposit",
+    "withdraw": "Withdraw",
+    "sendMoney": "Send Money"
+  },
+  "profile": {
+    "personalInfo": "Personal Information",
+    "manageAddresses": "Manage Addresses",
+    "language": "Language",
+    "security": "Security",
+    "support": "Support",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "addresses": {
+    "savedAddresses": "Saved Addresses",
+    "addAddress": "Add Address",
+    "home_address": "Home",
+    "work_address": "Work",
+    "streetAddress": "Street Address",
+    "city": "City",
+    "postalCode": "Postal Code (BP)",
+    "country": "Country",
+    "setAsDefault": "Set as default"
+  },
+  "language": {
+    "chooseLanguage": "Choose your preferred language",
+    "languageChange": "Language Change",
+    "languageChangeDesc": "Changing your language will update all text in the app immediately."
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "continue": "Continue",
+    "done": "Done"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "comingSoon": "Coming Soon"
+  }
+}
