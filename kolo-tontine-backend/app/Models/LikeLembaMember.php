@@ -9,10 +9,10 @@ class LikeLembaMember extends Model
 {
     use HasFactory;
 
-    protected $table = 'likeLemba_members';
+    protected $table = 'like_lemba_members';
 
     protected $fillable = [
-        'likeLemba_id',
+        'like_lemba_id',
         'user_id',
         'slot_number',
         'payout_month',
@@ -21,14 +21,14 @@ class LikeLembaMember extends Model
         'payments_remaining',
         'status',
         'has_received_payout',
-        'payout_date',
+        'payout_received_date',
         'payout_amount',
     ];
 
     protected $casts = [
         'total_paid' => 'decimal:2',
         'payout_amount' => 'decimal:2',
-        'payout_date' => 'date',
+        'payout_received_date' => 'date',
         'has_received_payout' => 'boolean',
         'joined_at' => 'datetime',
     ];
@@ -39,7 +39,7 @@ class LikeLembaMember extends Model
     
     public function likeLemba()
     {
-        return $this->belongsTo(LikeLemba::class, 'likeLemba_id');
+        return $this->belongsTo(LikeLemba::class, 'like_lemba_id');
     }
 
     public function user()
@@ -50,7 +50,7 @@ class LikeLembaMember extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class, 'user_id', 'user_id')
-                    ->where('likeLemba_id', $this->likeLemba_id);
+                    ->where('like_lemba_id', $this->like_lemba_id);
     }
 
     /**
