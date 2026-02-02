@@ -13,10 +13,21 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('first_name', 100);
+            $table->string('last_name', 100);
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('phone', 20)->unique();
             $table->string('password');
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('referral_code', 10)->unique();
+            $table->foreignId('referred_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->boolean('has_referral_bonus')->default(false);
+            $table->enum('plan_tier', ['bronze', 'silver', 'gold'])->default('bronze');
+            $table->decimal('wallet_balance', 15, 2)->default(0);
+            $table->decimal('card_balance', 15, 2)->default(0);
+            $table->enum('kyc_status', ['pending', 'verified', 'rejected'])->default('pending');
+            $table->string('id_card_path')->nullable();
+            $table->string('selfie_path')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

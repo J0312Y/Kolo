@@ -2,20 +2,22 @@ import { apiClient, ApiResponse } from './api';
 import { User } from '../types';
 
 export interface RegisterData {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   phone: string;
   email: string;
-  referralCode?: string;
+  password: string;
+  password_confirmation: string;
+  referral_code?: string;
 }
 
 export interface LoginData {
-  phone: string;
-  password?: string;
+  email: string;
+  password: string;
 }
 
 export interface VerifyOtpData {
-  phone: string;
+  user_id: string;
   otp: string;
 }
 
@@ -24,21 +26,34 @@ export interface AuthResponse {
   token: string;
 }
 
+export interface RegisterResponse {
+  user: {
+    id: string | number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    referral_code: string;
+    has_referral_bonus: boolean;
+  };
+  otp_sent: boolean;
+}
+
 class AuthService {
-  async register(data: RegisterData): Promise<ApiResponse<AuthResponse>> {
-    return apiClient.post<AuthResponse>('/register', data);
+  async register(data: RegisterData): Promise<ApiResponse<RegisterResponse>> {
+    return apiClient.post<RegisterResponse>('/register', data);
   }
 
   async login(data: LoginData): Promise<ApiResponse<AuthResponse>> {
     return apiClient.post<AuthResponse>('/login', data);
   }
 
-  async sendOtp(phone: string): Promise<ApiResponse<{ message: string }>> {
-    return apiClient.post<{ message: string }>('/send-otp', { phone });
+  async sendOtp(email: string): Promise<ApiResponse<{ message: string }>> {
+    return apiClient.post<{ message: string }>('/resend-verification', { email });
   }
 
   async verifyOtp(data: VerifyOtpData): Promise<ApiResponse<AuthResponse>> {
-    const response = await apiClient.post<AuthResponse>('/verify-otp', data);
+    const response = await apiClient.post<AuthResponse>('/verify-email', data);
     if (response.data.token) {
       apiClient.setToken(response.data.token);
     }
