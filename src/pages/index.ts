@@ -3,6 +3,7 @@ export { Circles } from './Circles';
 export { Wallet } from './Wallet';
 export { Card } from './Card';
 export { Profile } from './Profile';
+export { Goals } from './Goals';
 export { Login } from './Login';
 export { Register } from './Register';
 export { VerifyEmail } from './VerifyEmail';
