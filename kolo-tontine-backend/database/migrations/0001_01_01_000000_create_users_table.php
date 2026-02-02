@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('phone', 20)->unique();
             $table->string('password');
             $table->timestamp('email_verified_at')->nullable();
+            $table->enum('account_status', ['pending_verification', 'active', 'suspended', 'closed'])->default('pending_verification');
             $table->string('referral_code', 10)->unique();
             $table->foreignId('referred_by')->nullable()->constrained('users')->onDelete('set null');
             $table->boolean('has_referral_bonus')->default(false);
