@@ -59,7 +59,7 @@ class TestDatabaseViews extends Command
                 $first = $data->first();
                 $this->table(
                     array_keys((array)$first),
-                    [$first]
+                    [array_values((array)$first)]
                 );
             }
 
