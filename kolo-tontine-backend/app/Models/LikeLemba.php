@@ -9,7 +9,7 @@ class LikeLemba extends Model
 {
     use HasFactory;
 
-    protected $table = 'likeLembas';
+    protected $table = 'like_lemba';
 
     protected $fillable = [
         'admin_id',
@@ -21,6 +21,7 @@ class LikeLemba extends Model
         'total_slots',
         'status',
         'current_members',
+        'current_cycle',
         'start_date',
         'end_date',
         'next_payout_date',
@@ -48,19 +49,19 @@ class LikeLemba extends Model
 
     public function members()
     {
-        return $this->hasMany(LikeLembaMember::class, 'likeLemba_id');
+        return $this->hasMany(LikeLembaMember::class, 'like_lemba_id');
     }
 
     public function users()
     {
-        return $this->belongsToMany(User::class, 'likeLemba_members')
+        return $this->belongsToMany(User::class, 'like_lemba_members', 'like_lemba_id', 'user_id')
             ->withPivot('slot_number', 'payout_month', 'total_paid', 'payments_made', 'payments_remaining', 'status')
             ->withTimestamps();
     }
 
     public function payments()
     {
-        return $this->hasMany(Payment::class, 'likeLemba_id');
+        return $this->hasMany(Payment::class, 'like_lemba_id');
     }
 
     public function chatMessages()

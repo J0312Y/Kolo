@@ -1,22 +1,39 @@
-import { apiClient, ApiResponse } from './api';
-import { Goal } from '../types';
+import { apiClient } from './api';
+import type { ApiResponse } from '../types';
+
+export interface Goal {
+  id: number;
+  user_id: number;
+  title: string;
+  description: string;
+  target_amount: number;
+  current_amount: number;
+  deadline: string;
+  status: 'active' | 'completed' | 'cancelled';
+  category: 'education' | 'health' | 'business' | 'travel' | 'other';
+  created_at: string;
+  updated_at: string;
+}
 
 export interface CreateGoalData {
-  name: string;
+  title: string;
   description: string;
-  targetAmount: number;
+  target_amount: number;
   deadline: string;
-  category: string;
-  icon?: string;
-  color?: string;
+  category: 'education' | 'health' | 'business' | 'travel' | 'other';
+}
+
+export interface GoalContribution {
+  amount: number;
+  payment_method: string;
 }
 
 class GoalsService {
-  async getMyGoals(): Promise<ApiResponse<Goal[]>> {
+  async getGoals(): Promise<ApiResponse<Goal[]>> {
     return apiClient.get<Goal[]>('/goals');
   }
 
-  async getGoalById(id: string | number): Promise<ApiResponse<Goal>> {
+  async getGoal(id: number): Promise<ApiResponse<Goal>> {
     return apiClient.get<Goal>(`/goals/${id}`);
   }
 
@@ -24,32 +41,24 @@ class GoalsService {
     return apiClient.post<Goal>('/goals', data);
   }
 
-  async updateGoal(id: string | number, data: Partial<CreateGoalData>): Promise<ApiResponse<Goal>> {
+  async updateGoal(id: number, data: Partial<CreateGoalData>): Promise<ApiResponse<Goal>> {
     return apiClient.put<Goal>(`/goals/${id}`, data);
   }
 
-  async deleteGoal(id: string | number): Promise<ApiResponse<{ message: string }>> {
-    return apiClient.delete<{ message: string }>(`/goals/${id}`);
+  async deleteGoal(id: number): Promise<ApiResponse<void>> {
+    return apiClient.delete<void>(`/goals/${id}`);
   }
 
-  async contributeToGoal(
-    id: string | number,
-    amount: number,
-    paymentMethodId: string
-  ): Promise<ApiResponse<{ message: string; transactionId: string }>> {
-    return apiClient.post<{ message: string; transactionId: string }>(`/goals/${id}/contribute`, {
-      amount,
-      payment_method_id: paymentMethodId,
-    });
+  async contribute(id: number, data: GoalContribution): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`/goals/${id}/contribute`, data);
   }
 
-  async withdrawFromGoal(
-    id: string | number,
-    amount: number
-  ): Promise<ApiResponse<{ message: string; transactionId: string }>> {
-    return apiClient.post<{ message: string; transactionId: string }>(`/goals/${id}/withdraw`, {
-      amount,
-    });
+  async withdraw(id: number, amount: number): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`/goals/${id}/withdraw`, { amount });
+  }
+
+  async getProgress(id: number): Promise<ApiResponse<{ percentage: number; amount_remaining: number }>> {
+    return apiClient.get<{ percentage: number; amount_remaining: number }>(`/goals/${id}/progress`);
   }
 }
 

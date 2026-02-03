@@ -1,70 +1,105 @@
-import { apiClient, ApiResponse } from './api';
-import { LikeLemba, LikeLembaMember, ChatMessage } from '../types';
+import { apiClient } from './api';
+import type { ApiResponse } from '../types';
 
-export interface CreateCircleData {
+export interface LikeLemba {
+  id: number;
   name: string;
-  description?: string;
-  amount: string;
-  duration: number;
-  totalMembers: number;
+  description: string;
+  contribution_amount: number;
+  frequency: 'daily' | 'weekly' | 'monthly';
+  total_slots: number;
+  current_members: number;
+  status: 'pending' | 'active' | 'completed' | 'cancelled';
+  visibility: 'public' | 'private';
+  auto_start: boolean;
+  invitation_code?: string;
+  next_payout_date: string;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+  is_member?: boolean;
+  my_slot?: number | null;
+  admin_name?: string;
 }
 
-export interface JoinCircleData {
-  inviteCode: string;
-  slotNumber?: number;
+export interface LikeLembaMember {
+  id: number;
+  like_lemba_id: number;
+  user_id: number;
+  slot_number: number | null;
+  join_date: string;
+  payments_made: number;
+  payments_remaining: number;
+  has_received_payout: boolean;
+  payout_date: string | null;
+  user?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+  };
+}
+
+export interface CreateLikeLembaData {
+  name: string;
+  description: string;
+  contribution_amount: number;
+  frequency: 'daily' | 'weekly' | 'monthly';
+  total_slots: number;
+  visibility: 'public' | 'private';
+  auto_start?: boolean;
 }
 
 class CirclesService {
-  async getMyCircles(): Promise<ApiResponse<{ active: LikeLemba[]; finished: LikeLemba[] }>> {
-    return apiClient.get<{ active: LikeLemba[]; finished: LikeLemba[] }>('/likelembas');
+  async getMyCircles(): Promise<ApiResponse<LikeLemba[]>> {
+    return apiClient.get<LikeLemba[]>('/likeLembas');
   }
 
-  async getCircleById(id: string | number): Promise<ApiResponse<LikeLemba>> {
-    return apiClient.get<LikeLemba>(`/likelembas/${id}`);
+  async discoverCircles(): Promise<ApiResponse<LikeLemba[]>> {
+    return apiClient.get<LikeLemba[]>('/likeLembas/discover');
   }
 
-  async createCircle(data: CreateCircleData): Promise<ApiResponse<LikeLemba>> {
-    return apiClient.post<LikeLemba>('/likelembas', data);
+  async getCircle(id: number): Promise<ApiResponse<LikeLemba>> {
+    return apiClient.get<LikeLemba>(`/likeLembas/${id}`);
   }
 
-  async joinCircle(data: JoinCircleData): Promise<ApiResponse<LikeLemba>> {
-    return apiClient.post<LikeLemba>('/likelembas/join', data);
+  async createCircle(data: CreateLikeLembaData): Promise<ApiResponse<LikeLemba>> {
+    return apiClient.post<LikeLemba>('/likeLembas', data);
   }
 
-  async leaveCircle(id: string | number): Promise<ApiResponse<{ message: string }>> {
-    return apiClient.post<{ message: string }>(`/likelembas/${id}/leave`);
+  async updateCircle(id: number, data: Partial<CreateLikeLembaData>): Promise<ApiResponse<LikeLemba>> {
+    return apiClient.put<LikeLemba>(`/likeLembas/${id}`, data);
   }
 
-  async getCircleMembers(id: string | number): Promise<ApiResponse<LikeLembaMember[]>> {
-    return apiClient.get<LikeLembaMember[]>(`/likelembas/${id}/members`);
+  async deleteCircle(id: number): Promise<ApiResponse<void>> {
+    return apiClient.delete<void>(`/likeLembas/${id}`);
   }
 
-  async makePayment(
-    id: string | number,
-    paymentMethodId: string
-  ): Promise<ApiResponse<{ message: string; transactionId: string }>> {
-    return apiClient.post<{ message: string; transactionId: string }>(
-      `/likelembas/${id}/payments`,
-      { payment_method_id: paymentMethodId }
-    );
+  async joinCircle(id: number): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`/likeLembas/${id}/join`, {});
   }
 
-  async getCircleChat(id: string | number): Promise<ApiResponse<ChatMessage[]>> {
-    return apiClient.get<ChatMessage[]>(`/likelembas/${id}/chat`);
+  async joinWithCode(code: string): Promise<ApiResponse<void>> {
+    return apiClient.post<void>('/likeLembas/join-with-code', { invitation_code: code });
   }
 
-  async sendChatMessage(
-    id: string | number,
-    message: string
-  ): Promise<ApiResponse<ChatMessage>> {
-    return apiClient.post<ChatMessage>(`/likelembas/${id}/chat`, { message });
+  async leaveCircle(id: number): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`/likeLembas/${id}/leave`, {});
   }
 
-  async inviteMembers(
-    id: string | number,
-    emails: string[]
-  ): Promise<ApiResponse<{ message: string }>> {
-    return apiClient.post<{ message: string }>(`/likelembas/${id}/invite`, { emails });
+  async getMembers(id: number): Promise<ApiResponse<LikeLembaMember[]>> {
+    return apiClient.get<LikeLembaMember[]>(`/likeLembas/${id}/members`);
+  }
+
+  async getAvailableSlots(id: number): Promise<ApiResponse<number[]>> {
+    return apiClient.get<number[]>(`/likeLembas/${id}/available-slots`);
+  }
+
+  async selectSlot(id: number, slotNumber: number): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`/likeLembas/${id}/select-slot`, { slot_number: slotNumber });
+  }
+
+  async validateInvitationCode(code: string): Promise<ApiResponse<{ valid: boolean; like_lemba?: LikeLemba }>> {
+    return apiClient.get<{ valid: boolean; like_lemba?: LikeLemba }>(`/likeLembas/validate-code/${code}`);
   }
 }
 
