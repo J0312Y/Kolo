@@ -88,7 +88,7 @@ export const Wallet: React.FC = () => {
               <h3 className="text-gray-900 font-bold text-xl mb-2">You don't have any payments due yet</h3>
               <p className="text-gray-500 text-sm mb-6">Your due payments and your balance will appear here after you join a circle.</p>
               <button 
-                onClick={() => {setSubScreen('join'); }}
+                onClick={() => navigate('/circles?screen=join')}
                 className="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold inline-flex items-center space-x-2"
               >
                 <span>Join a new circle</span>
@@ -170,7 +170,7 @@ export const Wallet: React.FC = () => {
                         <button 
                           onClick={() => {
                             setSelectedCircle(circles.find(c => c.name === payment.circleName));
-                            setSubScreen('choose-payment-method');
+                            navigate('/circles?screen=choose-payment-method');
                           }}
                           className="w-full bg-yellow-500 text-white py-3 rounded-full font-bold hover:bg-yellow-600 transition"
                         >
@@ -294,7 +294,7 @@ export const Wallet: React.FC = () => {
                 <File className="text-blue-600 mb-2" size={24} />
                 <p className="font-semibold text-gray-900 text-sm">Payment policy</p>
               </div>
-              <div onClick={() => setSubScreen('customer-support')} className="bg-white border-2 border-gray-200 rounded-2xl p-5 cursor-pointer hover:border-blue-500 transition">
+              <div onClick={() => navigate('/profile?screen=customer-support')} className="bg-white border-2 border-gray-200 rounded-2xl p-5 cursor-pointer hover:border-blue-500 transition">
                 <MessageCircle className="text-blue-600 mb-2" size={24} />
                 <p className="font-semibold text-gray-900 text-sm">Customer Support</p>
               </div>
@@ -1105,9 +1105,7 @@ export const Wallet: React.FC = () => {
               </button>
               
               <button 
-                onClick={() => {
-                  setSubScreen('join');
-                  }}
+                onClick={() => navigate('/circles?screen=join')}
                 className="bg-green-50 rounded-xl p-4 text-left hover:bg-green-100 transition"
               >
                 <PlusCircle className="text-green-600 mb-2" size={24} />
@@ -1151,7 +1149,7 @@ export const Wallet: React.FC = () => {
           <div className="space-y-4 mb-8">
             {/* National ID */}
             <button 
-              onClick={() => setSubScreen('scan-national-id')}
+              onClick={() => navigate('/profile?screen=scan-national-id')}
               className="w-full bg-white border-2 border-gray-200 rounded-2xl p-5 text-left"
             >
               <div className="flex items-center justify-between">
@@ -1189,7 +1187,7 @@ export const Wallet: React.FC = () => {
 
             {/* Contract */}
             <button 
-              onClick={() => setSubScreen('signing-requests')}
+              onClick={() => navigate('/profile?screen=signing-requests')}
               className="w-full bg-white border-2 border-gray-200 rounded-2xl p-5 text-left"
             >
               <div className="flex items-center justify-between">

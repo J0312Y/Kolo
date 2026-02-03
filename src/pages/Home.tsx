@@ -87,7 +87,7 @@ export const Home: React.FC = () => {
       <div className="px-6 mt-6">
         <div className="grid grid-cols-4 gap-3">
           <button 
-            onClick={() => setSubScreen('join')}
+            onClick={() => navigate('/circles?screen=join')}
             className="flex flex-col items-center"
           >
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-2 shadow-md">
@@ -97,7 +97,7 @@ export const Home: React.FC = () => {
           </button>
 
           <button 
-            onClick={() => setSubScreen('create-likelemba-step1')}
+            onClick={() => navigate('/circles?screen=create-likelemba-step1')}
             className="flex flex-col items-center"
           >
             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mb-2 shadow-md">
@@ -117,7 +117,7 @@ export const Home: React.FC = () => {
           </button>
 
           <button 
-            onClick={() => setSubScreen('referral')}
+            onClick={() => navigate('/circles?screen=referral')}
             className="flex flex-col items-center"
           >
             <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mb-2 shadow-md">
@@ -175,11 +175,11 @@ export const Home: React.FC = () => {
                 <button 
                   onClick={() => {
                     if (!circleDuration) {
-                      setSubScreen('circle-details-duration');
+                      navigate('/circles?screen=circle-details-duration');
                     } else if (!selectedSlot) {
-                      setSubScreen('circle-slot');
+                      navigate('/circles?screen=circle-slot');
                     } else {
-                      setSubScreen('payout-method-selection');
+                      navigate('/circles?screen=payout-method-selection');
                     }
                   }}
                   className="w-full bg-blue-600 text-white py-3 rounded-full font-bold"
@@ -237,11 +237,11 @@ export const Home: React.FC = () => {
                 <button 
                   onClick={() => {
                     if (!likeLembaAmount) {
-                      setSubScreen('create-likelemba-step2');
+                      navigate('/circles?screen=create-likelemba-step2');
                     } else if (!likeLembaDuration) {
-                      setSubScreen('create-likelemba-step2');
+                      navigate('/circles?screen=create-likelemba-step2');
                     } else {
-                      setSubScreen('create-likelemba-step3');
+                      navigate('/circles?screen=create-likelemba-step3');
                     }
                   }}
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-full font-bold"
@@ -292,7 +292,7 @@ export const Home: React.FC = () => {
                 </div>
 
                 <button 
-                  onClick={() => setSubScreen('join-group-details')}
+                  onClick={() => navigate('/circles?screen=join-group-details')}
                   className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-full font-bold"
                 >
                   Continue
@@ -341,7 +341,7 @@ export const Home: React.FC = () => {
                 </div>
 
                 <button 
-                  onClick={() => setSubScreen('choose-duration')}
+                  onClick={() => navigate('/circles?screen=choose-duration')}
                   className="w-full bg-blue-600 text-white py-3 rounded-full font-bold"
                 >
                   Continue
@@ -539,7 +539,7 @@ export const Home: React.FC = () => {
               <h3 className="text-blue-900 font-bold text-lg mb-1">Refer friends, earn 300 XAF</h3>
               <p className="text-blue-700 text-sm mb-4">The more friends you invite, the more you save!</p>
               <button 
-                onClick={() => setSubScreen('referral')}
+                onClick={() => navigate('/circles?screen=referral')}
                 className="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold flex items-center space-x-2"
               >
                 <span>Invite friends</span>
@@ -735,7 +735,7 @@ export const Home: React.FC = () => {
                 Invite your friends now and you both enjoy a 300 EGP discount when they pay their first installment! The more invites you send, the bigger your discount.
               </p>
               <button 
-                onClick={() => setSubScreen('referral')}
+                onClick={() => navigate('/circles?screen=referral')}
                 className="text-blue-600 font-bold"
               >
                 Invite now!
@@ -788,7 +788,7 @@ export const Home: React.FC = () => {
                 Zero fees on your Game'ya! Join one of our special slots and receive exactly what you pay with no admin fees!
               </p>
               <button 
-                onClick={() => setSubScreen('join')}
+                onClick={() => navigate('/circles?screen=join')}
                 className="text-blue-600 font-bold"
               >
                 Join now!
