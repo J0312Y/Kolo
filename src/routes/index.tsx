@@ -1,15 +1,12 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context';
 import { Home, Circles, Wallet, Card, Profile, Login, Register, VerifyEmail } from '../pages';
+import { Goals } from '../pages/Goals';
 import { BottomNavigation } from '../components/layout';
+import { Tab } from '../types';
 
-// Protected Route wrapper
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -30,35 +27,52 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   return <>{children}</>;
 };
 
-// Main App Layout with Bottom Navigation
 const AppLayout: React.FC = () => {
-  const [currentTab, setCurrentTab] = React.useState<'home' | 'circles' | 'wallet' | 'card' | 'profile'>('home');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const getTabFromPath = (pathname: string): Tab => {
+    if (pathname === '/' || pathname.startsWith('/home')) return 'home';
+    if (pathname.startsWith('/circles')) return 'circles';
+    if (pathname.startsWith('/wallet')) return 'wallet';
+    if (pathname.startsWith('/card')) return 'card';
+    return 'home';
+  };
+
+  const currentTab = getTabFromPath(location.pathname);
+
+  const handleTabChange = (tab: Tab) => {
+    switch (tab) {
+      case 'home': navigate('/'); break;
+      case 'circles': navigate('/circles'); break;
+      case 'join': navigate('/circles?screen=join'); break;
+      case 'wallet': navigate('/wallet'); break;
+      case 'card': navigate('/card'); break;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="max-w-md mx-auto bg-gray-50 min-h-screen relative flex flex-col">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/circles" element={<Circles />} />
         <Route path="/wallet" element={<Wallet />} />
         <Route path="/card" element={<Card />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/goals" element={<Goals />} />
       </Routes>
-      <BottomNavigation currentTab={currentTab} onTabChange={setCurrentTab} />
+      <BottomNavigation currentTab={currentTab} onTabChange={handleTabChange} />
     </div>
   );
 };
 
-// Router Configuration
 export const AppRoutes: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public auth routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-
-        {/* Protected routes */}
         <Route
           path="/*"
           element={

@@ -256,7 +256,7 @@ export type Screen =
   | 'payout-eligibility'
   | 'payout-method';
 
-export type Tab = 'home' | 'circles' | 'wallet' | 'card' | 'profile';
+export type Tab = 'home' | 'circles' | 'join' | 'wallet' | 'card';
 export type CirclesTab = 'active' | 'finished';
 export type TransactionFilter = 'all' | 'payment' | 'payout' | 'deposit' | 'withdrawal';
 export type NotificationFilter = 'all' | 'payment' | 'group' | 'payout' | 'system';
