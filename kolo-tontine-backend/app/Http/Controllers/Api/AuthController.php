@@ -412,11 +412,13 @@ class AuthController extends Controller
      */
     protected function sendVerificationEmail($user, $otp)
     {
-        // In production, use actual email service
-        // For now, just log it
         \Log::info("Verification OTP for {$user->email}: {$otp}");
 
-        // Example with Laravel Mail:
-        // Mail::to($user->email)->send(new VerificationMail($otp));
+        Mail::raw(
+            "Your OTP verification code is: {$otp}\n\nThis code expires in 10 minutes.",
+            function ($message) use ($user) {
+                $message->to($user->email)->subject('Your Kolo Verification Code');
+            }
+        );
     }
 }

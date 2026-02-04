@@ -9,7 +9,7 @@ export const Goals: React.FC = () => {
   const [searchParams] = useSearchParams();
   const {
     userGoals, setUserGoals, selectedGoal, setSelectedGoal,
-    userPlan, setUserPlan, getPlanLimits, canCreateCustomGoal, calculateAdminFee
+    activeLikeLemba, userPlan, setUserPlan, getPlanLimits, canCreateCustomGoal, calculateAdminFee
   } = useApp();
   const [subScreen, setSubScreen] = React.useState<string>(searchParams.get('screen') || 'my-goals');
 
