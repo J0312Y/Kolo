@@ -1,5 +1,5 @@
 import { apiClient } from './api';
-import type { ApiResponse } from '../types';
+import type { ApiResponse } from './api';
 
 export interface Transaction {
   id: number;
@@ -52,9 +52,7 @@ class WalletService {
   }
 
   async getByDateRange(startDate: string, endDate: string): Promise<ApiResponse<Transaction[]>> {
-    return apiClient.get<Transaction[]>('/transactions/date-range', {
-      params: { start_date: startDate, end_date: endDate }
-    });
+    return apiClient.get<Transaction[]>(`/transactions/date-range?start_date=${startDate}&end_date=${endDate}`);
   }
 
   async topUpWallet(data: TopUpData): Promise<ApiResponse<void>> {
