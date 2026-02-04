@@ -8,7 +8,10 @@ export const Home: React.FC = () => {
   const navigate = useNavigate();
   const {
     firstName, notifications, setNotifications, activeLikeLemba,
-    finishedLikeLemba, userGoals, setSelectedGoal, transactions
+    finishedLikeLemba, userGoals, setSelectedGoal, transactions,
+    circleAmount, circleDuration, selectedDuration, selectedSlot,
+    selectedCircle, likeLembaName, likeLembaAmount, likeLembaDuration,
+    likeLembaMembers, joinCode
   } = useApp();
   const [subScreen, setSubScreen] = React.useState('home');
 
