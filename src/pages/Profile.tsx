@@ -10,6 +10,7 @@ export const Profile: React.FC = () => {
   const { logout } = useAuth();
   const {
     firstName, lastName, phone, email, language, setLanguage, userPlan,
+    getCirclesRemaining,
     supportTickets, setSupportTickets, selectedTicket, setSelectedTicket,
     supportMessage, setSupportMessage, sendSupportMessage,
     liveChatMessages, setLiveChatMessages, liveChatMessage, setLiveChatMessage,
@@ -229,7 +230,7 @@ export const Profile: React.FC = () => {
         </div>
 
         <button 
-          onClick={handleLogout}
+          onClick={logout}
           className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-full font-bold mb-4 flex items-center justify-center space-x-2 hover:bg-blue-50 transition-colors"
         >
           <LogOut size={20} />

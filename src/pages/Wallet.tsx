@@ -1,14 +1,15 @@
 // @ts-nocheck
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon } from 'lucide-react';
 import { useApp } from '../context';
 
 export const Wallet: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
-    activeLikeLemba, transactions, selectedGoal, setSelectedGoal,
+    activeLikeLemba, finishedLikeLemba, circles, transactions,
+    selectedGoal, setSelectedGoal, selectedCircle, setSelectedCircle,
     selectedLikeLemba, setSelectedLikeLemba, userPlan
   } = useApp();
   const [subScreen, setSubScreen] = React.useState<string>(searchParams.get('screen') || 'payments');
