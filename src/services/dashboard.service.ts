@@ -1,5 +1,5 @@
 import { apiClient } from './api';
-import type { ApiResponse } from '../types';
+import type { ApiResponse } from './api';
 
 export interface DashboardStats {
   wallet_balance: number;

@@ -28,6 +28,9 @@ Route::prefix('v1')->group(function () {
     Route::post('/verify-phone', [AuthController::class, 'verifyPhone']);
     Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
     
+    // Resend verification OTP
+    Route::post('/resend-verification', [AuthController::class, 'resendVerificationEmail']);
+
     // LikeLemba invitation validation (public)
     Route::get('/likeLembas/validate-code/{code}', [LikeLembaController::class, 'validateInvitationCode']);
 });

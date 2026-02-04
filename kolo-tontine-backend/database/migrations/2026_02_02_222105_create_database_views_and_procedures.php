@@ -16,6 +16,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Stored procedures and some views are MySQL-only; skip on SQLite
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         // ============================================
         // VIEW 1: User Credit Score (For Banks)
         // ============================================
@@ -418,6 +423,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         // Drop procedures
         DB::statement('DROP PROCEDURE IF EXISTS get_enterprise_report');
         DB::statement('DROP PROCEDURE IF EXISTS generate_payment_reminders');
