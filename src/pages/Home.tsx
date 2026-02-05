@@ -151,7 +151,7 @@ export const Home: React.FC = () => {
                 
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <p className="text-3xl font-bold text-gray-900">{parseInt(circleAmount).toLocaleString()} <span className="text-xl text-gray-500">XAF</span></p>
+                    <p className="text-3xl font-bold text-gray-900">{circleAmount ? parseInt(circleAmount).toLocaleString() : '0'} <span className="text-xl text-gray-500">XAF</span></p>
                     <p className="text-blue-600 font-bold">{circleDuration?.monthly.toLocaleString() || '1,500'} XAF <span className="text-gray-500 font-normal text-sm">Monthly</span></p>
                   </div>
                   <div className="text-right">
@@ -558,8 +558,9 @@ export const Home: React.FC = () => {
 
 
   const NotificationsScreen = () => {
+    const [notificationFilter, setNotificationFilter] = React.useState('all');
     const unreadCount = notifications.filter(n => !n.read).length;
-    
+
     const filteredNotifications = notificationFilter === 'all' 
       ? notifications 
       : notifications.filter(n => n.type === notificationFilter);

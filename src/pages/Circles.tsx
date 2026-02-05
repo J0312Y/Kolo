@@ -75,7 +75,7 @@ export const Circles: React.FC = () => {
   const [subScreen, setSubScreen] = React.useState<string>(searchParams.get('screen') || 'circles');
   const [circlesTab, setCirclesTab] = React.useState<'active' | 'finished'>('active');
   const [selectedPayoutMethod, setSelectedPayoutMethod] = React.useState<string | null>(null);
-  const [slotTab, setSlotTab] = React.useState('all');
+  const [slotTab, setSlotTab] = React.useState('first');
   const [showCorporateModal, setShowCorporateModal] = React.useState(false);
   const [corporateStep, setCorporateStep] = React.useState(1);
   const [currentOfferIndex, setCurrentOfferIndex] = React.useState(0);

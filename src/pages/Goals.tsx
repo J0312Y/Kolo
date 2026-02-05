@@ -21,7 +21,7 @@ export const Goals: React.FC = () => {
   }, [searchParams, selectedGoal]);
 
   const GoalDetailScreen = () => {
-    if (!selectedGoal) return null;
+    if (!selectedGoal || !selectedGoal.name) return null;
 
     const userGoal = userGoals.find(g => g.name === selectedGoal.name.replace('\n', ' '));
     const progress = userGoal ? Math.floor((userGoal.currentAmount / userGoal.targetAmount) * 100) : 0;
