@@ -1503,6 +1503,25 @@ export const Circles: React.FC = () => {
     if (!selectedLikeLemba) return null;
 
     const messages = groupChats[selectedLikeLemba.name] || [];
+
+    // Fetch chat messages on mount
+    React.useEffect(() => {
+      const fetchChatMessages = async () => {
+        if (!selectedLikeLemba?.id) return;
+        try {
+          const response = await circlesService.getChatMessages(selectedLikeLemba.id);
+          if (response.success && response.data) {
+            setGroupChats(prev => ({
+              ...prev,
+              [selectedLikeLemba.name]: response.data
+            }));
+          }
+        } catch (error) {
+          console.error('Error fetching chat messages:', error);
+        }
+      };
+      fetchChatMessages();
+    }, [selectedLikeLemba?.id]);
     const memberCount = selectedLikeLemba.currentMembers || selectedLikeLemba.totalMembers || 0;
 
     const formatTime = (timestamp) => {
@@ -1631,23 +1650,25 @@ export const Circles: React.FC = () => {
               ref={chatInputRef}
               type="text"
               defaultValue=""
-              onKeyPress={(e) => {
+              onKeyPress={async (e) => {
                 if (e.key === 'Enter') {
                   const message = e.target.value;
                   if (message.trim()) {
-                    const newMessage = {
-                      id: Date.now(),
-                      sender: 'You',
-                      message: message,
-                      timestamp: new Date().toISOString(),
-                      isMe: true,
-                      type: 'message'
-                    };
-                    setGroupChats(prev => ({
-                      ...prev,
-                      [selectedLikeLemba.name]: [...(prev[selectedLikeLemba.name] || []), newMessage]
-                    }));
-                    e.target.value = '';
+                    try {
+                      await circlesService.sendChatMessage(selectedLikeLemba.id, message);
+                      // Refresh messages
+                      const response = await circlesService.getChatMessages(selectedLikeLemba.id);
+                      if (response.success && response.data) {
+                        setGroupChats(prev => ({
+                          ...prev,
+                          [selectedLikeLemba.name]: response.data
+                        }));
+                      }
+                      e.target.value = '';
+                    } catch (error) {
+                      console.error('Error sending message:', error);
+                      alert('Failed to send message. Please try again.');
+                    }
                   }
                 }
               }}
@@ -1655,23 +1676,25 @@ export const Circles: React.FC = () => {
               className="flex-1 bg-gray-100 rounded-full px-4 py-3 outline-none text-gray-900 placeholder-gray-500"
             />
 
-            <button 
-              onClick={() => {
+            <button
+              onClick={async () => {
                 const message = chatInputRef.current?.value;
                 if (message && message.trim()) {
-                  const newMessage = {
-                    id: Date.now(),
-                    sender: 'You',
-                    message: message,
-                    timestamp: new Date().toISOString(),
-                    isMe: true,
-                    type: 'message'
-                  };
-                  setGroupChats(prev => ({
-                    ...prev,
-                    [selectedLikeLemba.name]: [...(prev[selectedLikeLemba.name] || []), newMessage]
-                  }));
-                  chatInputRef.current.value = '';
+                  try {
+                    await circlesService.sendChatMessage(selectedLikeLemba.id, message);
+                    // Refresh messages
+                    const response = await circlesService.getChatMessages(selectedLikeLemba.id);
+                    if (response.success && response.data) {
+                      setGroupChats(prev => ({
+                        ...prev,
+                        [selectedLikeLemba.name]: response.data
+                      }));
+                    }
+                    chatInputRef.current.value = '';
+                  } catch (error) {
+                    console.error('Error sending message:', error);
+                    alert('Failed to send message. Please try again.');
+                  }
                 }
               }}
               className="p-3 rounded-full bg-blue-600 text-white"

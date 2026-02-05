@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, CreditCard, PlusCircle, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../context';
 import { cardService } from '../services/card.service';
+import { paymentMethodsService } from '../services/payment-methods.service';
 
 export const Card: React.FC = () => {
   const navigate = useNavigate();
@@ -28,35 +29,82 @@ export const Card: React.FC = () => {
     { id: 4, type: 'mobile', name: 'Airtel Money', last4: '', number: '+242 05 555 1234', isDefault: false, brand: 'airtel' }
   ]);
 
-  const handleSetDefault = (id: number) => {
-    setPaymentMethods(paymentMethods.map(pm => ({ ...pm, isDefault: pm.id === id })));
+  const handleSetDefault = async (id: number) => {
+    try {
+      await paymentMethodsService.setDefault(id);
+      // Refresh payment methods
+      const response = await paymentMethodsService.getAll();
+      if (response.success && response.data) {
+        setPaymentMethods(response.data);
+      }
+    } catch (error: any) {
+      console.error('Error setting default payment method:', error);
+      alert(error.message || 'Failed to set default payment method.');
+    }
   };
   const handleDeletePaymentMethod = (id: number) => {
     setPaymentToDelete(paymentMethods.find(pm => pm.id === id));
     setShowDeleteConfirm(true);
   };
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (paymentToDelete) {
-      setPaymentMethods(paymentMethods.filter(pm => pm.id !== paymentToDelete.id));
-      setShowDeleteConfirm(false);
-      setPaymentToDelete(null);
+      try {
+        await paymentMethodsService.delete(paymentToDelete.id);
+        // Refresh payment methods
+        const response = await paymentMethodsService.getAll();
+        if (response.success && response.data) {
+          setPaymentMethods(response.data);
+        }
+        setShowDeleteConfirm(false);
+        setPaymentToDelete(null);
+      } catch (error: any) {
+        console.error('Error deleting payment method:', error);
+        alert(error.message || 'Failed to delete payment method.');
+      }
     }
   };
   const handleAddPayment = () => {
     setShowAddPaymentModal(true);
     setNewPaymentData({ cardName: '', last4: '', provider: '', phoneNumber: '' });
   };
-  const handleSavePayment = () => {
-    if (newPaymentType === 'card') {
-      if (newPaymentData.cardName && newPaymentData.last4) {
-        setPaymentMethods([...paymentMethods, { id: Date.now(), type: 'card', name: newPaymentData.cardName, last4: newPaymentData.last4, isDefault: false, brand: newPaymentData.cardName.toLowerCase(), number: '' }]);
-        setShowAddPaymentModal(false);
-      } else alert('Please fill all card fields');
-    } else {
-      if (newPaymentData.provider && newPaymentData.phoneNumber) {
-        setPaymentMethods([...paymentMethods, { id: Date.now(), type: 'mobile', name: `${newPaymentData.provider} Mobile Money`, last4: '', number: newPaymentData.phoneNumber, isDefault: false, brand: newPaymentData.provider.toLowerCase() }]);
-        setShowAddPaymentModal(false);
-      } else alert('Please fill all mobile money fields');
+  const handleSavePayment = async () => {
+    try {
+      if (newPaymentType === 'card') {
+        if (newPaymentData.cardName && newPaymentData.last4) {
+          await paymentMethodsService.add({
+            type: 'card',
+            provider: newPaymentData.cardName,
+            card_number: newPaymentData.last4
+          });
+          // Refresh payment methods
+          const response = await paymentMethodsService.getAll();
+          if (response.success && response.data) {
+            setPaymentMethods(response.data);
+          }
+          setShowAddPaymentModal(false);
+        } else {
+          alert('Please fill all card fields');
+        }
+      } else {
+        if (newPaymentData.provider && newPaymentData.phoneNumber) {
+          await paymentMethodsService.add({
+            type: 'mobile_money',
+            provider: newPaymentData.provider,
+            phone_number: newPaymentData.phoneNumber
+          });
+          // Refresh payment methods
+          const response = await paymentMethodsService.getAll();
+          if (response.success && response.data) {
+            setPaymentMethods(response.data);
+          }
+          setShowAddPaymentModal(false);
+        } else {
+          alert('Please fill all mobile money fields');
+        }
+      }
+    } catch (error: any) {
+      console.error('Error adding payment method:', error);
+      alert(error.message || 'Failed to add payment method.');
     }
   };
   const handleOpenTopUp = () => { setShowTopUpModal(true); setTopUpAmount(''); setTopUpSource(null); };
@@ -114,6 +162,21 @@ export const Card: React.FC = () => {
       }
     };
     fetchCardBalance();
+  }, []);
+
+  // Fetch payment methods on mount
+  React.useEffect(() => {
+    const fetchPaymentMethods = async () => {
+      try {
+        const response = await paymentMethodsService.getAll();
+        if (response.success && response.data) {
+          setPaymentMethods(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching payment methods:', error);
+      }
+    };
+    fetchPaymentMethods();
   }, []);
 
   return (

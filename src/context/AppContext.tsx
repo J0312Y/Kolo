@@ -6,6 +6,8 @@ import { goalsService } from '../services/goals.service';
 import { walletService } from '../services/wallet.service';
 import { dashboardService } from '../services/dashboard.service';
 import { transactionsService } from '../services/transactions.service';
+import { notificationsService } from '../services/notifications.service';
+import { supportService } from '../services/support.service';
 
 interface AppContextType {
   // User info
@@ -244,10 +246,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     try {
       // Fetch all data in parallel
-      const [circlesRes, goalsRes, transactionsRes] = await Promise.all([
+      const [circlesRes, goalsRes, transactionsRes, notificationsRes, supportTicketsRes] = await Promise.all([
         circlesService.getMyCircles().catch(() => ({ success: false, data: [] })),
         goalsService.getGoals().catch(() => ({ success: false, data: [] })),
-        transactionsService.getAll().catch(() => ({ success: false, data: [] }))
+        transactionsService.getAll().catch(() => ({ success: false, data: [] })),
+        notificationsService.getAll().catch(() => ({ success: false, data: [] })),
+        supportService.getTickets().catch(() => ({ success: false, data: [] }))
       ]);
 
       // Process circles
@@ -266,6 +270,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Process transactions
       if (transactionsRes.success && transactionsRes.data) {
         setTransactions(transactionsRes.data);
+      }
+
+      // Process notifications
+      if (notificationsRes.success && notificationsRes.data) {
+        setNotifications(notificationsRes.data);
+      }
+
+      // Process support tickets
+      if (supportTicketsRes.success && supportTicketsRes.data) {
+        setSupportTickets(supportTicketsRes.data);
       }
 
       // Update user info from context
@@ -388,10 +402,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 1500);
   }, [liveChatMessage]);
 
-  const createNewTicket = useCallback((subject: string, category: string, message: string) => {
+  const createNewTicket = useCallback(async (subject: string, category: string, message: string) => {
     if (!subject.trim() || !category || !message.trim()) { alert('Please fill in all fields'); return; }
-    const newTicket = { id: Date.now(), subject, category, status: 'open', priority: 'medium', createdAt: new Date().toISOString(), messages: [{ id: 1, sender: 'You', message, timestamp: new Date().toISOString(), isMe: true }] };
-    setSupportTickets(prev => [newTicket, ...prev]);
+    try {
+      await supportService.createTicket({ subject, category, message, priority: 'medium' });
+      // Refresh support tickets
+      const response = await supportService.getTickets();
+      if (response.success && response.data) {
+        setSupportTickets(response.data);
+      }
+    } catch (error: any) {
+      console.error('Error creating support ticket:', error);
+      alert(error.message || 'Failed to create support ticket. Please try again.');
+    }
   }, []);
 
   const sendSupportMessage = useCallback((ticketId: any) => {

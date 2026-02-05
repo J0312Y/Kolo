@@ -101,6 +101,14 @@ class CirclesService {
   async validateInvitationCode(code: string): Promise<ApiResponse<{ valid: boolean; like_lemba?: LikeLemba }>> {
     return apiClient.get<{ valid: boolean; like_lemba?: LikeLemba }>(`/likeLembas/validate-code/${code}`);
   }
+
+  async getChatMessages(id: number): Promise<ApiResponse<any[]>> {
+    return apiClient.get<any[]>(`/likeLembas/${id}/chat`);
+  }
+
+  async sendChatMessage(id: number, message: string): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`/likeLembas/${id}/chat`, { message });
+  }
 }
 
 export const circlesService = new CirclesService();
