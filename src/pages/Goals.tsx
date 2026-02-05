@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon } from 'lucide-react';
 import { useApp } from '../context';
+import { goalsService } from '../services/goals.service';
 
 export const Goals: React.FC = () => {
   const navigate = useNavigate();
@@ -521,28 +522,34 @@ export const Goals: React.FC = () => {
       { id: 'general', name: 'General', icon: '💰', color: 'bg-gray-100' }
     ];
 
-    const handleCreate = () => {
+    const handleCreate = async () => {
       if (!goalName || !goalAmount || !goalDeadline || !goalCategory) {
         alert('Please fill in all fields');
         return;
       }
 
-      const selectedCat = categories.find(c => c.id === goalCategory);
-      const newGoal = {
-        id: userGoals.length + 1,
-        name: goalName,
-        icon: selectedCat.icon,
-        color: selectedCat.color,
-        targetAmount: parseInt(goalAmount),
-        currentAmount: 0,
-        deadline: goalDeadline,
-        category: goalCategory,
-        description: '',
-        active: true
-      };
+      try {
+        // Call backend to create goal
+        await goalsService.createGoal({
+          title: goalName,
+          target_amount: parseInt(goalAmount),
+          deadline: goalDeadline,
+          category: goalCategory,
+          description: ''
+        });
 
-      setUserGoals([...userGoals, newGoal]);
-      navigate('/goals');
+        // Refresh goals from backend
+        const goalsRes = await goalsService.getGoals();
+        if (goalsRes.success && goalsRes.data) {
+          setUserGoals(goalsRes.data);
+        }
+
+        alert('Goal created successfully!');
+        navigate('/goals');
+      } catch (error: any) {
+        console.error('Error creating goal:', error);
+        alert(error.message || 'Failed to create goal. Please try again.');
+      }
     };
 
     return (

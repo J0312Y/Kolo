@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon, MoreVertical, Smile, Send } from 'lucide-react';
 import { useApp } from '../context';
+import { circlesService } from '../services/circles.service';
 
 const GroupNameInput = React.memo(({ defaultValue, onBlur }) => {
   const inputRef = React.useRef(null);
@@ -2528,25 +2529,28 @@ export const Circles: React.FC = () => {
       </div>
 
       <div className="fixed bottom-20 left-0 right-0 bg-white px-6 py-4 border-t border-gray-200 max-w-md mx-auto">
-        <button 
-          onClick={() => {
-            // Add the joined Likelemba to active circles
-            addLikeLemba({
-              name: joinCode.replace(/_2026$/, '').replace(/_/g, ' '),
-              amount: '50000',
-              duration: 6,
-              totalMembers: 6,
-              currentMembers: 2,
-              type: 'joined',
-              inviteCode: joinCode,
-              monthsCompleted: 0
-            });
-            
-            // Reset join code
-            setJoinCode('');
-            
-            // Navigate to Circles screen
-            navigate('/circles');
+        <button
+          onClick={async () => {
+            try {
+              // Call backend to join with code
+              await circlesService.joinWithCode(joinCode);
+
+              // Refresh circles from backend
+              const circlesRes = await circlesService.getMyCircles();
+              if (circlesRes.success && circlesRes.data) {
+                const active = circlesRes.data.filter((c: any) => c.status === 'active' || c.status === 'pending');
+                setActiveLikeLemba(active);
+              }
+
+              // Reset join code
+              setJoinCode('');
+
+              alert('Successfully joined the circle!');
+              navigate('/circles');
+            } catch (error: any) {
+              console.error('Error joining circle:', error);
+              alert(error.message || 'Failed to join circle. Please try again.');
+            }
             }}
           className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-full font-bold text-lg shadow-lg"
         >
@@ -3103,29 +3107,39 @@ export const Circles: React.FC = () => {
       </div>
 
       <div className="fixed bottom-20 left-0 right-0 bg-white px-6 py-4 border-t border-gray-200 max-w-md mx-auto">
-        <button 
-          onClick={() => {
-            // Add the created Likelemba to active circles
-            addLikeLemba({
-              name: likeLembaName,
-              amount: likeLembaAmount,
-              duration: likeLembaDuration.months,
-              totalMembers: likeLembaMembers,
-              currentMembers: 1,
-              type: 'created',
-              description: likeLembaDescription,
-              inviteCode: `${likeLembaName.toUpperCase().replace(/\s/g, '_')}_2026`,
-              monthsCompleted: 0
-            });
-            
-            // Reset form
-            setLikeLembaName('');
-            setLikeLembaAmount('');
-            setLikeLembaDuration(null);
-            setLikeLembaDescription('');
-            
-            // Navigate to Circles screen
-            navigate('/circles');
+        <button
+          onClick={async () => {
+            try {
+              // Call backend to create circle
+              await circlesService.createCircle({
+                name: likeLembaName,
+                description: likeLembaDescription,
+                contribution_amount: parseInt(likeLembaAmount),
+                frequency: 'monthly',
+                total_slots: parseInt(likeLembaMembers),
+                visibility: 'private',
+                auto_start: true
+              });
+
+              // Refresh circles from backend
+              const circlesRes = await circlesService.getMyCircles();
+              if (circlesRes.success && circlesRes.data) {
+                const active = circlesRes.data.filter((c: any) => c.status === 'active' || c.status === 'pending');
+                setActiveLikeLemba(active);
+              }
+
+              // Reset form
+              setLikeLembaName('');
+              setLikeLembaAmount('');
+              setLikeLembaDuration(null);
+              setLikeLembaDescription('');
+
+              alert('Circle created successfully!');
+              navigate('/circles');
+            } catch (error: any) {
+              console.error('Error creating circle:', error);
+              alert(error.message || 'Failed to create circle. Please try again.');
+            }
             }}
           className="w-full bg-blue-600 text-white py-4 rounded-full font-bold text-lg"
         >
