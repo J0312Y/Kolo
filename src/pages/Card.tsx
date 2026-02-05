@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, CreditCard, PlusCircle, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../context';
+import { cardService } from '../services/card.service';
 
 export const Card: React.FC = () => {
   const navigate = useNavigate();
@@ -59,18 +60,61 @@ export const Card: React.FC = () => {
     }
   };
   const handleOpenTopUp = () => { setShowTopUpModal(true); setTopUpAmount(''); setTopUpSource(null); };
-  const handleTopUpConfirm = () => {
+
+  const handleFreezeToggle = async () => {
+    try {
+      if (isCardFrozen) {
+        await cardService.unfreezeCard();
+      } else {
+        await cardService.freezeCard();
+      }
+      setIsCardFrozen(!isCardFrozen);
+    } catch (error: any) {
+      console.error('Error toggling card freeze:', error);
+      alert(error.message || 'Failed to update card status. Please try again.');
+    }
+  };
+
+  const handleTopUpConfirm = async () => {
     if (!topUpAmount || parseFloat(topUpAmount) <= 0) { alert('Please enter a valid amount'); return; }
     if (!topUpSource) { alert('Please select a payment source'); return; }
     setIsProcessing(true);
-    setTimeout(() => {
-      setCardBalance(cardBalance + parseFloat(topUpAmount));
+
+    try {
+      // Call backend to top up card
+      await cardService.topUpCard(parseFloat(topUpAmount));
+
+      // Fetch updated balance
+      const balanceRes = await cardService.getCardBalance();
+      if (balanceRes.success && balanceRes.data) {
+        setCardBalance(balanceRes.data.card_balance);
+      }
+
       setIsProcessing(false);
       setShowTopUpModal(false);
       setShowTopUpSuccess(true);
       setTimeout(() => setShowTopUpSuccess(false), 3000);
-    }, 2000);
+    } catch (error: any) {
+      console.error('Error topping up card:', error);
+      setIsProcessing(false);
+      alert(error.message || 'Failed to top up card. Please try again.');
+    }
   };
+
+  // Fetch card balance on mount
+  React.useEffect(() => {
+    const fetchCardBalance = async () => {
+      try {
+        const balanceRes = await cardService.getCardBalance();
+        if (balanceRes.success && balanceRes.data) {
+          setCardBalance(balanceRes.data.card_balance);
+        }
+      } catch (error) {
+        console.error('Error fetching card balance:', error);
+      }
+    };
+    fetchCardBalance();
+  }, []);
 
   return (
     <div className="flex-1 overflow-y-auto pb-24 bg-gray-50">
@@ -117,7 +161,7 @@ export const Card: React.FC = () => {
             <button onClick={handleOpenTopUp} className="bg-blue-600 text-white py-3 rounded-xl font-semibold flex flex-col items-center justify-center">
               <span className="text-2xl mb-1">⬆️</span><span className="text-sm">Top Up</span>
             </button>
-            <button onClick={() => setIsCardFrozen(!isCardFrozen)} className={`${isCardFrozen ? 'bg-green-600' : 'bg-yellow-600'} text-white py-3 rounded-xl font-semibold flex flex-col items-center justify-center`}>
+            <button onClick={handleFreezeToggle} className={`${isCardFrozen ? 'bg-green-600' : 'bg-yellow-600'} text-white py-3 rounded-xl font-semibold flex flex-col items-center justify-center`}>
               <span className="text-2xl mb-1">{isCardFrozen ? '🔓' : '❄️'}</span><span className="text-sm">{isCardFrozen ? 'Unfreeze' : 'Freeze'}</span>
             </button>
             <button onClick={() => setShowCardDetails(!showCardDetails)} className="bg-gray-700 text-white py-3 rounded-xl font-semibold flex flex-col items-center justify-center">
