@@ -19,6 +19,9 @@ All frontend features are now fully connected to the backend API. Data persists 
 - ✅ Fetch circles → `/v1/likeLembas`
 - ✅ Join with code → `/v1/likeLembas/join-with-code`
 - ✅ Create circle → `/v1/likeLembas` POST
+- ✅ Leave circle → `/v1/likeLembas/{id}/leave`
+- ✅ Delete circle → `/v1/likeLembas/{id}` DELETE
+- ✅ View members → `/v1/likeLembas/{id}/members`
 - ✅ Group chat → `/v1/likeLembas/{id}/chat` GET/POST
 - ✅ Real-time chat messages from database
 - ✅ All circle data persists
@@ -26,6 +29,9 @@ All frontend features are now fully connected to the backend API. Data persists 
 ### 3. **Goals** (AppContext + Goals.tsx)
 - ✅ Fetch goals → `/v1/goals`
 - ✅ Create goal → `/v1/goals` POST
+- ✅ Contribute to goal → `/v1/goals/{id}/contribute`
+- ✅ Withdraw from goal → `/v1/goals/{id}/withdraw`
+- ✅ Delete goal → `/v1/goals/{id}` DELETE
 - ✅ Track progress → Stored in database
 - ✅ All goals persist across sessions
 
@@ -47,9 +53,10 @@ All frontend features are now fully connected to the backend API. Data persists 
 - ✅ Set default → `/v1/payment-methods/{id}/set-default`
 - ✅ All methods persist
 
-### 7. **Notifications** (AppContext + Home.tsx)
+### 7. **Notifications** (AppContext + Home.tsx + Circles.tsx)
 - ✅ Fetch notifications → `/v1/notifications`
 - ✅ Mark as read → `/v1/notifications/{id}/read`
+- ✅ Mark all as read → `/v1/notifications/read-all`
 - ✅ Real notifications from database
 - ✅ Auto-refresh on login
 
@@ -58,6 +65,12 @@ All frontend features are now fully connected to the backend API. Data persists 
 - ✅ Create ticket → `/v1/support/ticket` POST
 - ✅ Ticket history persists
 - ✅ Messages stored in database
+
+### 9. **Payments & Contributions** (NEW)
+- ✅ Created payments.service.ts → `/v1/payments/contribute`
+- ✅ Goals contributions via modal
+- ✅ Upcoming/overdue payments support
+- ✅ Payment calendar endpoint ready
 
 ---
 
@@ -79,8 +92,15 @@ All frontend features are now fully connected to the backend API. Data persists 
 | Notifications | ✅ | ✅ | ✅ | **LIVE** |
 | Payment Methods | ✅ | ✅ | ✅ | **LIVE** |
 | Support Tickets | ✅ | ✅ | ✅ | **LIVE** |
+| Goal Contributions | ✅ | ✅ | ✅ | **LIVE** |
+| Goal Withdraw | ✅ | ✅ | ✅ | **LIVE** |
+| Goal Delete | ✅ | ✅ | ✅ | **LIVE** |
+| Circle Leave | ✅ | ✅ | ✅ | **LIVE** |
+| Circle Delete | ✅ | ✅ | ✅ | **LIVE** |
+| Circle Members | ✅ | ✅ | ✅ | **LIVE** |
+| Mark Notifications Read | ✅ | ✅ | ✅ | **LIVE** |
 
-**Overall: 100% Integrated** (14/14 features live)
+**Overall: 100% Integrated** (21/21 features live)
 
 ---
 
@@ -142,9 +162,10 @@ All backend services exist and are wired:
 - ✅ `/src/services/card.service.ts` → Card operations
 - ✅ `/src/services/wallet.service.ts` → Transactions
 - ✅ `/src/services/transactions.service.ts` → Transaction history
-- ✅ `/src/services/notifications.service.ts` → Notifications (NEW)
-- ✅ `/src/services/payment-methods.service.ts` → Payment methods CRUD (NEW)
-- ✅ `/src/services/support.service.ts` → Support tickets (NEW)
+- ✅ `/src/services/notifications.service.ts` → Notifications CRUD
+- ✅ `/src/services/payment-methods.service.ts` → Payment methods CRUD
+- ✅ `/src/services/support.service.ts` → Support tickets
+- ✅ `/src/services/payments.service.ts` → Contributions & payments (NEW)
 
 ---
 
@@ -209,8 +230,8 @@ UI updates with fresh data
 
 ## 🎉 Summary
 
-**Before:** 70% integration (10/14 features) - notifications, chat, payment methods, support tickets mocked  
-**After:** 100% integration (14/14 features) - ALL features live with backend
+**Phase 1-3 (Previous):** 100% basic integration (14/14 create/read operations)
+**Phase 4 (Current):** 100% complete CRUD (21/21 operations including update/delete)
 
 **Every user action now:**
 1. Calls the backend API
@@ -219,6 +240,13 @@ UI updates with fresh data
 4. Persists across sessions
 
 **Zero mock data remaining!**
+
+### 🆕 Phase 4 Additions (Latest):
+- ✅ Goals: Contribute, Withdraw, Delete operations
+- ✅ Circles: Leave, Delete, View Members operations
+- ✅ Notifications: Mark as read, Mark all as read
+- ✅ Payments: Created service for contributions
+- ✅ All CRUD operations now complete
 
 ---
 

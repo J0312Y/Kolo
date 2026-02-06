@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon, MoreVertical, Smile, Send } from 'lucide-react';
 import { useApp } from '../context';
 import { circlesService } from '../services/circles.service';
+import { notificationsService } from '../services/notifications.service';
 
 const GroupNameInput = React.memo(({ defaultValue, onBlur }) => {
   const inputRef = React.useRef(null);
@@ -198,24 +199,83 @@ export const Circles: React.FC = () => {
                   </div>
 
                   {circlesTab === 'active' && (
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={() => {
-                          setSelectedLikeLemba(circle);
-                          setSubScreen('likelemba-details');
-                        }}
-                        className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold text-sm"
-                      >
-                        View Details
-                      </button>
-                      {circle.type === 'created' && (
-                        <button 
-                          onClick={handleCopyCode}
-                          className="px-4 bg-blue-100 text-blue-600 rounded-xl font-semibold"
+                    <div className="space-y-2">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            setSelectedLikeLemba(circle);
+                            setSubScreen('likelemba-details');
+                          }}
+                          className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold text-sm"
                         >
-                          {copied ? <Check size={20} /> : <Copy size={20} />}
+                          View Details
                         </button>
-                      )}
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await circlesService.getMembers(circle.id);
+                              if (response.success && response.data) {
+                                alert(`Members (${response.data.length}):\n${response.data.map(m => `${m.user?.first_name || 'User'} ${m.user?.last_name || ''} - Slot ${m.slot_number || 'TBD'}`).join('\n')}`);
+                              }
+                            } catch (error: any) {
+                              alert(error.message || 'Failed to fetch members');
+                            }
+                          }}
+                          className="px-4 bg-purple-100 text-purple-600 rounded-xl font-semibold"
+                        >
+                          <Users size={20} />
+                        </button>
+                        {circle.type === 'created' && (
+                          <button
+                            onClick={handleCopyCode}
+                            className="px-4 bg-blue-100 text-blue-600 rounded-xl font-semibold"
+                          >
+                            {copied ? <Check size={20} /> : <Copy size={20} />}
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={async () => {
+                            if (!confirm('Are you sure you want to leave this circle?')) return;
+                            try {
+                              await circlesService.leaveCircle(circle.id);
+                              const circlesRes = await circlesService.getMyCircles();
+                              if (circlesRes.success && circlesRes.data) {
+                                const active = circlesRes.data.filter((c: any) => c.status === 'active' || c.status === 'pending');
+                                setActiveLikeLemba(active);
+                              }
+                              alert('Successfully left the circle');
+                            } catch (error: any) {
+                              alert(error.message || 'Failed to leave circle');
+                            }
+                          }}
+                          className="flex-1 bg-orange-100 text-orange-600 py-2 rounded-xl font-semibold text-sm"
+                        >
+                          Leave Circle
+                        </button>
+                        {circle.type === 'created' && (
+                          <button
+                            onClick={async () => {
+                              if (!confirm('Are you sure you want to delete this circle? This action cannot be undone.')) return;
+                              try {
+                                await circlesService.deleteCircle(circle.id);
+                                const circlesRes = await circlesService.getMyCircles();
+                                if (circlesRes.success && circlesRes.data) {
+                                  const active = circlesRes.data.filter((c: any) => c.status === 'active' || c.status === 'pending');
+                                  setActiveLikeLemba(active);
+                                }
+                                alert('Circle deleted successfully');
+                              } catch (error: any) {
+                                alert(error.message || 'Failed to delete circle');
+                              }
+                            }}
+                            className="flex-1 bg-red-100 text-red-600 py-2 rounded-xl font-semibold text-sm"
+                          >
+                            Delete Circle
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -1358,14 +1418,24 @@ export const Circles: React.FC = () => {
       ? notifications 
       : notifications.filter(n => n.type === notificationFilter);
 
-    const markAsRead = (id) => {
-      setNotifications(notifications.map(n => 
-        n.id === id ? { ...n, read: true } : n
-      ));
+    const markAsRead = async (id) => {
+      try {
+        await notificationsService.markAsRead(id);
+        setNotifications(notifications.map(n =>
+          n.id === id ? { ...n, read: true } : n
+        ));
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
     };
 
-    const markAllAsRead = () => {
-      setNotifications(notifications.map(n => ({ ...n, read: true })));
+    const markAllAsRead = async () => {
+      try {
+        await notificationsService.markAllAsRead();
+        setNotifications(notifications.map(n => ({ ...n, read: true })));
+      } catch (error) {
+        console.error('Error marking all as read:', error);
+      }
     };
 
     const getTimeAgo = (timestamp) => {

@@ -13,6 +13,10 @@ export const Goals: React.FC = () => {
     activeLikeLemba, userPlan, setUserPlan, getPlanLimits, canCreateCustomGoal, calculateAdminFee
   } = useApp();
   const [subScreen, setSubScreen] = React.useState<string>(searchParams.get('screen') || 'my-goals');
+  const [showContributeModal, setShowContributeModal] = React.useState(false);
+  const [contributeAmount, setContributeAmount] = React.useState('');
+  const [contributeGoalId, setContributeGoalId] = React.useState<number | null>(null);
+  const [isProcessingContribution, setIsProcessingContribution] = React.useState(false);
 
   React.useEffect(() => {
     const s = searchParams.get('screen');
@@ -156,9 +160,9 @@ export const Goals: React.FC = () => {
               </div>
             </div>
 
-            {/* Action Button */}
+            {/* Action Buttons */}
             {!userGoal ? (
-              <button 
+              <button
                 onClick={() => {
                   setUserGoals([...userGoals, {
                     id: userGoals.length + 1,
@@ -179,12 +183,69 @@ export const Goals: React.FC = () => {
                 🚀 Start This Goal
               </button>
             ) : (
-              <button 
-                onClick={() => navigate('/goals?screen=saving-programs')}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-full font-bold shadow-lg"
-              >
-                💰 Add More Savings
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setContributeGoalId(userGoal.id);
+                    setShowContributeModal(true);
+                  }}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-full font-bold shadow-lg"
+                >
+                  💰 Contribute to Goal
+                </button>
+
+                {userGoal.currentAmount > 0 && (
+                  <button
+                    onClick={async () => {
+                      const amount = prompt('Enter amount to withdraw (XAF):');
+                      if (!amount || parseFloat(amount) <= 0) return;
+
+                      if (parseFloat(amount) > userGoal.currentAmount) {
+                        alert('Insufficient balance in goal');
+                        return;
+                      }
+
+                      try {
+                        await goalsService.withdraw(userGoal.id, parseFloat(amount));
+                        const goalsRes = await goalsService.getGoals();
+                        if (goalsRes.success && goalsRes.data) {
+                          setUserGoals(goalsRes.data);
+                        }
+                        alert('Withdrawal successful!');
+                      } catch (error: any) {
+                        alert(error.message || 'Failed to withdraw from goal');
+                      }
+                    }}
+                    className="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-4 rounded-full font-bold shadow-lg"
+                  >
+                    🏦 Withdraw Funds
+                  </button>
+                )}
+
+                <button
+                  onClick={async () => {
+                    if (!confirm('Are you sure you want to delete this goal? This action cannot be undone.')) {
+                      return;
+                    }
+
+                    try {
+                      await goalsService.deleteGoal(userGoal.id);
+                      const goalsRes = await goalsService.getGoals();
+                      if (goalsRes.success && goalsRes.data) {
+                        setUserGoals(goalsRes.data);
+                      }
+                      setSelectedGoal(null);
+                      navigate('/goals');
+                      alert('Goal deleted successfully');
+                    } catch (error: any) {
+                      alert(error.message || 'Failed to delete goal');
+                    }
+                  }}
+                  className="w-full bg-gray-200 text-red-600 py-4 rounded-full font-bold"
+                >
+                  🗑️ Delete Goal
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -411,10 +472,21 @@ export const Goals: React.FC = () => {
                           ></div>
                         </div>
 
-                        <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center justify-between text-sm mb-3">
                           <span className="text-gray-600">Deadline: {new Date(goal.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                           <span className="text-orange-600 font-semibold">{(goal.targetAmount - goal.currentAmount).toLocaleString()} XAF left</span>
                         </div>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setContributeGoalId(goal.id);
+                            setShowContributeModal(true);
+                          }}
+                          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-full font-bold hover:from-blue-700 hover:to-indigo-700 transition"
+                        >
+                          💰 Contribute Now
+                        </button>
                       </div>
                     );
                   })}
@@ -1057,7 +1129,107 @@ export const Goals: React.FC = () => {
     );
   };
 
+  const handleContribute = async () => {
+    if (!contributeGoalId || !contributeAmount || parseFloat(contributeAmount) <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
 
+    setIsProcessingContribution(true);
+    try {
+      await goalsService.contribute(contributeGoalId, {
+        amount: parseFloat(contributeAmount),
+        payment_method: 'wallet'
+      });
+
+      const goalsRes = await goalsService.getGoals();
+      if (goalsRes.success && goalsRes.data) {
+        setUserGoals(goalsRes.data);
+      }
+
+      setShowContributeModal(false);
+      setContributeAmount('');
+      setContributeGoalId(null);
+      alert('Contribution successful!');
+    } catch (error: any) {
+      alert(error.message || 'Failed to contribute to goal');
+    } finally {
+      setIsProcessingContribution(false);
+    }
+  };
+
+  // Contribution Modal
+  const ContributeModal = () => {
+    if (!showContributeModal) return null;
+
+    const goal = userGoals.find(g => g.id === contributeGoalId);
+    if (!goal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+        <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Contribute to Goal</h2>
+              <button
+                onClick={() => {
+                  setShowContributeModal(false);
+                  setContributeAmount('');
+                  setContributeGoalId(null);
+                }}
+                className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition"
+              >
+                <X className="text-gray-600" size={20} />
+              </button>
+            </div>
+
+            <div className="bg-blue-50 rounded-2xl p-4 mb-6">
+              <p className="text-sm text-gray-600 mb-1">Contributing to</p>
+              <p className="text-xl font-bold text-gray-900">{goal.title || goal.name}</p>
+              <p className="text-sm text-gray-600 mt-2">
+                Current: {goal.current_amount?.toLocaleString() || goal.currentAmount?.toLocaleString() || 0} XAF
+              </p>
+              <p className="text-sm text-gray-600">
+                Target: {goal.target_amount?.toLocaleString() || goal.targetAmount?.toLocaleString() || 0} XAF
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Contribution Amount
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={contributeAmount}
+                  onChange={(e) => setContributeAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  className="w-full border-2 border-gray-200 rounded-xl p-4 text-gray-900 text-lg focus:border-blue-500 focus:outline-none"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">
+                  XAF
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 rounded-xl p-4 mb-6">
+              <p className="text-sm text-gray-700">
+                <span className="font-bold">💡 Note:</span> Funds will be deducted from your wallet balance.
+              </p>
+            </div>
+
+            <button
+              onClick={handleContribute}
+              disabled={isProcessingContribution || !contributeAmount || parseFloat(contributeAmount) <= 0}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-full font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessingContribution ? 'Processing...' : 'Confirm Contribution'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Sub-screen router
   if (subScreen === 'goal-detail') return <GoalDetailScreen />;
@@ -1066,5 +1238,11 @@ export const Goals: React.FC = () => {
   if (subScreen === 'upgrade') return <UpgradeScreen />;
   if (subScreen === 'my-plan') return <MyPlanScreen />;
   if (subScreen === 'feature-store') return <FeatureStoreScreen />;
-  return <MyGoalsScreen />;
+
+  return (
+    <>
+      <MyGoalsScreen />
+      <ContributeModal />
+    </>
+  );
 };

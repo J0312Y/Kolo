@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon } from 'lucide-react';
 import { useApp } from '../context';
+import { notificationsService } from '../services/notifications.service';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -565,14 +566,24 @@ export const Home: React.FC = () => {
       ? notifications 
       : notifications.filter(n => n.type === notificationFilter);
 
-    const markAsRead = (id) => {
-      setNotifications(notifications.map(n => 
-        n.id === id ? { ...n, read: true } : n
-      ));
+    const markAsRead = async (id) => {
+      try {
+        await notificationsService.markAsRead(id);
+        setNotifications(notifications.map(n =>
+          n.id === id ? { ...n, read: true } : n
+        ));
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
     };
 
-    const markAllAsRead = () => {
-      setNotifications(notifications.map(n => ({ ...n, read: true })));
+    const markAllAsRead = async () => {
+      try {
+        await notificationsService.markAllAsRead();
+        setNotifications(notifications.map(n => ({ ...n, read: true })));
+      } catch (error) {
+        console.error('Error marking all as read:', error);
+      }
     };
 
     const getTimeAgo = (timestamp) => {
