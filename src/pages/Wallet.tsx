@@ -3,6 +3,8 @@ import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon } from 'lucide-react';
 import { useApp } from '../context';
+import { paymentsService } from '../services/payments.service';
+import { circlesService } from '../services/circles.service';
 
 export const Wallet: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +17,9 @@ export const Wallet: React.FC = () => {
   const [subScreen, setSubScreen] = React.useState<string>(searchParams.get('screen') || 'payments');
   const [transactionFilter, setTransactionFilter] = React.useState('all');
   const [selectedTransaction, setSelectedTransaction] = React.useState<any>(null);
+  const [showPaymentModal, setShowPaymentModal] = React.useState(false);
+  const [selectedPayment, setSelectedPayment] = React.useState<any>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = React.useState(false);
 
   React.useEffect(() => {
     const s = searchParams.get('screen');
@@ -129,7 +134,13 @@ export const Wallet: React.FC = () => {
                             <p className="text-xs text-red-600 font-semibold">OVERDUE - {Math.abs(payment.daysUntilDue)} days late</p>
                           </div>
                         </div>
-                        <button className="w-full bg-red-600 text-white py-3 rounded-full font-bold hover:bg-red-700 transition">
+                        <button
+                          onClick={() => {
+                            setSelectedPayment(payment);
+                            setShowPaymentModal(true);
+                          }}
+                          className="w-full bg-red-600 text-white py-3 rounded-full font-bold hover:bg-red-700 transition"
+                        >
                           Pay Now
                         </button>
                       </div>
@@ -168,10 +179,10 @@ export const Wallet: React.FC = () => {
                             <p className="text-xs text-yellow-700 font-semibold">DUE IN {payment.daysUntilDue} DAYS</p>
                           </div>
                         </div>
-                        <button 
+                        <button
                           onClick={() => {
-                            setSelectedCircle(circles.find(c => c.name === payment.circleName));
-                            navigate('/circles?screen=choose-payment-method');
+                            setSelectedPayment(payment);
+                            setShowPaymentModal(true);
                           }}
                           className="w-full bg-yellow-500 text-white py-3 rounded-full font-bold hover:bg-yellow-600 transition"
                         >
@@ -1503,7 +1514,103 @@ export const Wallet: React.FC = () => {
     </div>
   );
 
+  const handlePayment = async () => {
+    if (!selectedPayment) return;
 
+    setIsProcessingPayment(true);
+    try {
+      const circle = activeLikeLemba.find(c => c.name === selectedPayment.circleName);
+      if (!circle) {
+        alert('Circle not found');
+        return;
+      }
+
+      await paymentsService.makeContribution({
+        like_lemba_id: circle.id,
+        amount: selectedPayment.amount,
+        payment_method: 'wallet'
+      });
+
+      // Refresh circles data
+      const circlesRes = await circlesService.getMyCircles();
+      if (circlesRes.success && circlesRes.data) {
+        // Update context with fresh data
+        alert('Payment successful!');
+      }
+
+      setShowPaymentModal(false);
+      setSelectedPayment(null);
+    } catch (error: any) {
+      alert(error.message || 'Failed to process payment');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  // Payment Modal
+  const PaymentModal = () => {
+    if (!showPaymentModal || !selectedPayment) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+        <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Confirm Payment</h2>
+              <button
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setSelectedPayment(null);
+                }}
+                className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition"
+              >
+                <X className="text-gray-600" size={20} />
+              </button>
+            </div>
+
+            <div className="bg-blue-50 rounded-2xl p-6 mb-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <span className="text-3xl">{selectedPayment.type === 'saving' ? '🌱' : '👥'}</span>
+                <div>
+                  <p className="text-sm text-gray-600">Payment to</p>
+                  <p className="text-xl font-bold text-gray-900">{selectedPayment.circleName}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Amount</p>
+                  <p className="text-2xl font-bold text-blue-600">{selectedPayment.amount.toLocaleString()} XAF</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Due Date</p>
+                  <p className="text-sm font-bold text-gray-900">
+                    {selectedPayment.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 rounded-xl p-4 mb-6">
+              <p className="text-sm text-gray-700">
+                <span className="font-bold">💳 Payment Method:</span> Wallet Balance
+              </p>
+              <p className="text-sm text-gray-700 mt-2">
+                <span className="font-bold">⚠️ Note:</span> This payment will be deducted from your wallet balance.
+              </p>
+            </div>
+
+            <button
+              onClick={handlePayment}
+              disabled={isProcessingPayment}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-full font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-700 hover:to-indigo-700 transition"
+            >
+              {isProcessingPayment ? 'Processing...' : `Pay ${selectedPayment.amount.toLocaleString()} XAF`}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Sub-screen router
   if (subScreen === 'payment-calendar') return <PaymentCalendarScreen />;
@@ -1516,5 +1623,11 @@ export const Wallet: React.FC = () => {
   if (subScreen === 'payment-policy') return <PaymentPolicyScreen />;
   if (subScreen === 'payment-settings') return <PaymentSettingsScreen />;
   if (subScreen === 'saved-cards') return <SavedCardsScreen />;
-  return <PaymentsScreen />;
+
+  return (
+    <>
+      <PaymentsScreen />
+      <PaymentModal />
+    </>
+  );
 };

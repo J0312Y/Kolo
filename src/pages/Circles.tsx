@@ -81,6 +81,10 @@ export const Circles: React.FC = () => {
   const [showCorporateModal, setShowCorporateModal] = React.useState(false);
   const [corporateStep, setCorporateStep] = React.useState(1);
   const [currentOfferIndex, setCurrentOfferIndex] = React.useState(0);
+  const [showEditCircleModal, setShowEditCircleModal] = React.useState(false);
+  const [editingCircle, setEditingCircle] = React.useState<any>(null);
+  const [editCircleName, setEditCircleName] = React.useState('');
+  const [editCircleDescription, setEditCircleDescription] = React.useState('');
   const mobileNumberRef = React.useRef<HTMLInputElement>(null);
   const bankNameRef = React.useRef<HTMLInputElement>(null);
   const accountNumberRef = React.useRef<HTMLInputElement>(null);
@@ -226,12 +230,25 @@ export const Circles: React.FC = () => {
                           <Users size={20} />
                         </button>
                         {circle.type === 'created' && (
-                          <button
-                            onClick={handleCopyCode}
-                            className="px-4 bg-blue-100 text-blue-600 rounded-xl font-semibold"
-                          >
-                            {copied ? <Check size={20} /> : <Copy size={20} />}
-                          </button>
+                          <>
+                            <button
+                              onClick={() => {
+                                setEditingCircle(circle);
+                                setEditCircleName(circle.name || '');
+                                setEditCircleDescription(circle.description || '');
+                                setShowEditCircleModal(true);
+                              }}
+                              className="px-4 bg-green-100 text-green-600 rounded-xl font-semibold"
+                            >
+                              <Settings size={20} />
+                            </button>
+                            <button
+                              onClick={handleCopyCode}
+                              className="px-4 bg-blue-100 text-blue-600 rounded-xl font-semibold"
+                            >
+                              {copied ? <Check size={20} /> : <Copy size={20} />}
+                            </button>
+                          </>
                         )}
                       </div>
                       <div className="flex space-x-2">
@@ -354,7 +371,23 @@ export const Circles: React.FC = () => {
             <ChevronRight className="text-blue-600" size={24} />
           </div>
 
-          <div 
+          <div
+            onClick={() => setSubScreen('discover-circles')}
+            className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-3xl p-6 flex items-center justify-between cursor-pointer hover:border-purple-400 transition shadow-sm"
+          >
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="text-3xl">🔍</div>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-lg mb-1">Discover Public Circles</h3>
+                <p className="text-gray-600 text-sm">Browse and join public circles created by the community.</p>
+              </div>
+            </div>
+            <ChevronRight className="text-purple-600" size={24} />
+          </div>
+
+          <div
             onClick={() => setSubScreen('choose-circle')}
             className="bg-white border-2 border-gray-200 rounded-3xl p-6 flex items-center justify-between cursor-pointer hover:border-blue-500 transition"
           >
@@ -373,6 +406,148 @@ export const Circles: React.FC = () => {
       </div>
     </div>
   );
+
+  const DiscoverCirclesScreen = () => {
+    const [publicCircles, setPublicCircles] = React.useState([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [searchQuery, setSearchQuery] = React.useState('');
+
+    React.useEffect(() => {
+      const fetchPublicCircles = async () => {
+        try {
+          const response = await circlesService.discoverCircles();
+          if (response.success && response.data) {
+            setPublicCircles(response.data);
+          }
+        } catch (error) {
+          console.error('Error fetching public circles:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchPublicCircles();
+    }, []);
+
+    const filteredCircles = publicCircles.filter(circle =>
+      circle.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      circle.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    return (
+      <div className="flex-1 overflow-y-auto pb-24 bg-gray-50">
+        <div className="bg-white px-6 py-4 flex items-center gap-4 border-b border-gray-200">
+          <button onClick={() => setSubScreen('join')}>
+            <ArrowLeft size={24} />
+          </button>
+          <h1 className="text-xl font-bold text-gray-900">Discover Circles</h1>
+        </div>
+
+        <div className="px-6 py-6">
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search circles..."
+                className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="text-4xl mb-4">⏳</div>
+              <p className="text-gray-600">Loading public circles...</p>
+            </div>
+          ) : filteredCircles.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-gray-900 font-bold text-xl mb-2">
+                {searchQuery ? 'No circles found' : 'No public circles available'}
+              </h3>
+              <p className="text-gray-500">
+                {searchQuery ? 'Try a different search term' : 'Check back later for new circles'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredCircles.map((circle) => (
+                <div key={circle.id} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center">
+                        <span className="text-2xl">👥</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900 text-lg">{circle.name}</h3>
+                        <p className="text-sm text-gray-500">
+                          {circle.member_count || 0}/{circle.max_members || 12} members
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                      Public
+                    </span>
+                  </div>
+
+                  {circle.description && (
+                    <p className="text-sm text-gray-600 mb-4">{circle.description}</p>
+                  )}
+
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="bg-blue-50 rounded-xl p-3">
+                      <p className="text-xs text-gray-600 mb-1">Payout</p>
+                      <p className="font-bold text-gray-900">{parseInt(circle.payout_amount || 0).toLocaleString()} XAF</p>
+                    </div>
+                    <div className="bg-purple-50 rounded-xl p-3">
+                      <p className="text-xs text-gray-600 mb-1">Duration</p>
+                      <p className="font-bold text-gray-900">{circle.duration || 0} months</p>
+                    </div>
+                    <div className="bg-green-50 rounded-xl p-3">
+                      <p className="text-xs text-gray-600 mb-1">Slots Left</p>
+                      <p className="font-bold text-gray-900">
+                        {(circle.max_members || 12) - (circle.member_count || 0)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={async () => {
+                      if (confirm(`Join ${circle.name}?`)) {
+                        try {
+                          if (circle.invitation_code) {
+                            await circlesService.joinWithCode(circle.invitation_code);
+                          } else {
+                            await circlesService.joinCircle(circle.id);
+                          }
+                          const circlesRes = await circlesService.getMyCircles();
+                          if (circlesRes.success && circlesRes.data) {
+                            const active = circlesRes.data.filter((c: any) => c.status === 'active' || c.status === 'pending');
+                            setActiveLikeLemba(active);
+                          }
+                          alert('Successfully joined the circle!');
+                          navigate('/circles');
+                        } catch (error: any) {
+                          alert(error.message || 'Failed to join circle');
+                        }
+                      }
+                    }}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-semibold"
+                  >
+                    Join Circle
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const ReferralScreen = () => (
     <div className="flex-1 overflow-y-auto pb-32 bg-white">
@@ -1942,20 +2117,54 @@ export const Circles: React.FC = () => {
 
 
   const CircleSlotScreen = () => {
-          const slots = {
+    const [availableSlots, setAvailableSlots] = React.useState<any[]>([]);
+    const [isLoadingSlots, setIsLoadingSlots] = React.useState(false);
+
+    React.useEffect(() => {
+      // Fetch available slots if we have a circle context
+      const fetchSlots = async () => {
+        if (selectedLikeLemba?.id) {
+          setIsLoadingSlots(true);
+          try {
+            const response = await circlesService.getAvailableSlots(selectedLikeLemba.id);
+            if (response.success && response.data) {
+              setAvailableSlots(response.data);
+            }
+          } catch (error) {
+            console.error('Error fetching slots:', error);
+          } finally {
+            setIsLoadingSlots(false);
+          }
+        }
+      };
+
+      fetchSlots();
+    }, [selectedLikeLemba]);
+
+    // Fallback to hardcoded slots for demo/creation flow
+    const defaultSlots = {
       first: [
-        { position: '1st', month: 'Feb 2026', fees: 'XAF 720 (8%)', status: 'locked', badge: null },
-        { position: '2nd', month: 'Mar 2026', fees: 'XAF 630 (7%)', status: 'available', badge: 'High Demand' }
+        { position: '1st', month: 'Feb 2026', fees: 'XAF 720 (8%)', status: 'available', badge: null, slot_number: 1 },
+        { position: '2nd', month: 'Mar 2026', fees: 'XAF 630 (7%)', status: 'available', badge: 'High Demand', slot_number: 2 }
       ],
       middle: [
-        { position: '3rd', month: 'Apr 2026', fees: 'XAF 360 (4%)', status: 'available', badge: null },
-        { position: '4th', month: 'May 2026', fees: null, status: 'booked', badge: 'Zero Fees' }
+        { position: '3rd', month: 'Apr 2026', fees: 'XAF 360 (4%)', status: 'available', badge: null, slot_number: 3 },
+        { position: '4th', month: 'May 2026', fees: null, status: 'available', badge: 'Zero Fees', slot_number: 4 }
       ],
       last: [
-        { position: '5th', month: 'Jun 2026', fees: null, status: 'available', badge: 'XAF 225 Discount' },
-        { position: '6th', month: 'Jul 2026', fees: null, status: 'booked', badge: 'XAF 360 Discount' }
+        { position: '5th', month: 'Jun 2026', fees: null, status: 'available', badge: 'XAF 225 Discount', slot_number: 5 },
+        { position: '6th', month: 'Jul 2026', fees: null, status: 'available', badge: 'XAF 360 Discount', slot_number: 6 }
       ]
     };
+
+    // Use available slots from backend if available, otherwise use defaults
+    const slots = availableSlots.length > 0
+      ? {
+          first: availableSlots.slice(0, 2),
+          middle: availableSlots.slice(2, 4),
+          last: availableSlots.slice(4, 6)
+        }
+      : defaultSlots;
 
     const currentSlots = slots[slotTab];
 
@@ -2101,7 +2310,27 @@ export const Circles: React.FC = () => {
         <div className="fixed bottom-0 left-0 right-0 bg-white px-6 py-6 border-t border-gray-200 max-w-md mx-auto">
           <button
             disabled={!selectedSlot}
-            onClick={() => selectedSlot && setSubScreen('payout-method-selection')}
+            onClick={async () => {
+              if (!selectedSlot) return;
+
+              // If we have a circle ID, submit the slot selection
+              if (selectedLikeLemba?.id && selectedSlot.slot_number) {
+                try {
+                  await circlesService.selectSlot(selectedLikeLemba.id, selectedSlot.slot_number);
+                  // Refresh circles data
+                  const circlesRes = await circlesService.getMyCircles();
+                  if (circlesRes.success && circlesRes.data) {
+                    const active = circlesRes.data.filter((c: any) => c.status === 'active' || c.status === 'pending');
+                    setActiveLikeLemba(active);
+                  }
+                } catch (error: any) {
+                  alert(error.message || 'Failed to select slot');
+                  return;
+                }
+              }
+
+              setSubScreen('payout-method-selection');
+            }}
             className={`w-full py-4 rounded-full font-bold text-lg ${
               selectedSlot ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
             }`}
@@ -3703,6 +3932,98 @@ export const Circles: React.FC = () => {
 
 
 
+  const handleUpdateCircle = async () => {
+    if (!editingCircle || !editCircleName.trim()) {
+      alert('Please enter a circle name');
+      return;
+    }
+
+    try {
+      await circlesService.updateCircle(editingCircle.id, {
+        name: editCircleName,
+        description: editCircleDescription
+      });
+
+      const circlesRes = await circlesService.getMyCircles();
+      if (circlesRes.success && circlesRes.data) {
+        const active = circlesRes.data.filter((c: any) => c.status === 'active' || c.status === 'pending');
+        setActiveLikeLemba(active);
+      }
+
+      setShowEditCircleModal(false);
+      setEditingCircle(null);
+      alert('Circle updated successfully!');
+    } catch (error: any) {
+      alert(error.message || 'Failed to update circle');
+    }
+  };
+
+  // Edit Circle Modal
+  const EditCircleModal = () => {
+    if (!showEditCircleModal || !editingCircle) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+        <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Edit Circle</h2>
+              <button
+                onClick={() => {
+                  setShowEditCircleModal(false);
+                  setEditingCircle(null);
+                }}
+                className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition"
+              >
+                <X className="text-gray-600" size={20} />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Circle Name
+              </label>
+              <input
+                type="text"
+                value={editCircleName}
+                onChange={(e) => setEditCircleName(e.target.value)}
+                placeholder="Enter circle name"
+                className="w-full border-2 border-gray-200 rounded-xl p-4 text-gray-900 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Description (Optional)
+              </label>
+              <textarea
+                value={editCircleDescription}
+                onChange={(e) => setEditCircleDescription(e.target.value)}
+                placeholder="Enter circle description"
+                rows={4}
+                className="w-full border-2 border-gray-200 rounded-xl p-4 text-gray-900 focus:border-blue-500 focus:outline-none resize-none"
+              />
+            </div>
+
+            <div className="bg-blue-50 rounded-xl p-4 mb-6">
+              <p className="text-sm text-gray-700">
+                <span className="font-bold">💡 Note:</span> Only name and description can be updated. Payout amount and duration cannot be changed.
+              </p>
+            </div>
+
+            <button
+              onClick={handleUpdateCircle}
+              disabled={!editCircleName.trim()}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-full font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-700 hover:to-indigo-700 transition"
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // ╔════════════════════════════════════════════════════════════════════╗
   // ║                  FLOW D'AUTHENTIFICATION COMPLET                   ║
   // ╠════════════════════════════════════════════════════════════════════╣
@@ -3713,6 +4034,7 @@ export const Circles: React.FC = () => {
 
   // Sub-screen router
   if (subScreen === 'join') return <JoinScreen />;
+  if (subScreen === 'discover-circles') return <DiscoverCirclesScreen />;
   if (subScreen === 'referral') return <ReferralScreen />;
   if (subScreen === 'choose-circle') return <ChooseCircleScreen />;
   if (subScreen === 'referral-tracker') return <ReferralTrackerScreen />;
@@ -3735,5 +4057,11 @@ export const Circles: React.FC = () => {
   if (subScreen === 'likelemba-created') return <LikeLembaCreatedScreen />;
   if (subScreen === 'likelemba-details') return <LikeLembaDetailsScreen />;
   if (subScreen === 'digital-wallet-form') return <DigitalWalletFormScreen />;
-  return <CirclesScreen />;
+
+  return (
+    <>
+      <CirclesScreen />
+      <EditCircleModal />
+    </>
+  );
 };
