@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services';
-import { Button, Input, Card } from '../components/ui';
-import { User, Mail, Phone, Lock, Gift, AlertCircle } from 'lucide-react';
+import { User, Mail, Phone, Lock, Gift, AlertCircle, ArrowLeft } from 'lucide-react';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -50,116 +49,212 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Créer un compte</h1>
-          <p className="text-gray-600">Rejoignez Kolo Tontine aujourd'hui</p>
-        </div>
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-purple-600 to-indigo-700 pt-12 pb-32 px-6 relative">
+        <button
+          onClick={() => navigate('/login')}
+          className="absolute top-6 left-6 text-white/80 hover:text-white"
+        >
+          <ArrowLeft size={24} />
+        </button>
 
+        <div className="text-center">
+          <div className="w-20 h-20 bg-white rounded-3xl shadow-lg mx-auto mb-4 flex items-center justify-center">
+            <div className="text-4xl">🪙</div>
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">Créer un compte</h1>
+          <p className="text-purple-200">Rejoignez Kolo Tontine aujourd'hui</p>
+        </div>
+      </div>
+
+      {/* Form Container */}
+      <div className="flex-1 bg-white -mt-20 rounded-t-3xl px-6 py-8 overflow-y-auto">
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3">
             <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
             <p className="text-red-800 text-sm">{error}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              type="text"
-              name="first_name"
-              label="Prénom"
-              placeholder="Jean"
-              value={formData.first_name}
-              onChange={handleChange}
-              icon={<User size={20} />}
-              required
-            />
+          {/* Name Fields */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Prénom
+              </label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                  <User size={20} />
+                </div>
+                <input
+                  type="text"
+                  name="first_name"
+                  placeholder="Jean"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  required
+                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:outline-none text-gray-900 placeholder-gray-400"
+                />
+              </div>
+            </div>
 
-            <Input
-              type="text"
-              name="last_name"
-              label="Nom"
-              placeholder="Mukendi"
-              value={formData.last_name}
-              onChange={handleChange}
-              icon={<User size={20} />}
-              required
-            />
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Nom
+              </label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                  <User size={20} />
+                </div>
+                <input
+                  type="text"
+                  name="last_name"
+                  placeholder="Mukendi"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  required
+                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:outline-none text-gray-900 placeholder-gray-400"
+                />
+              </div>
+            </div>
           </div>
 
-          <Input
-            type="email"
-            name="email"
-            label="Email"
-            placeholder="jean@example.com"
-            value={formData.email}
-            onChange={handleChange}
-            icon={<Mail size={20} />}
-            required
-          />
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Adresse email
+            </label>
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <Mail size={20} />
+              </div>
+              <input
+                type="email"
+                name="email"
+                placeholder="jean@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:outline-none text-gray-900 placeholder-gray-400"
+              />
+            </div>
+          </div>
 
-          <Input
-            type="tel"
-            name="phone"
-            label="Téléphone"
-            placeholder="+242065123456"
-            value={formData.phone}
-            onChange={handleChange}
-            icon={<Phone size={20} />}
-            required
-          />
+          {/* Phone */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Numéro de téléphone
+            </label>
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <Phone size={20} />
+              </div>
+              <input
+                type="tel"
+                name="phone"
+                placeholder="+242065123456"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:outline-none text-gray-900 placeholder-gray-400"
+              />
+            </div>
+          </div>
 
-          <Input
-            type="password"
-            name="password"
-            label="Mot de passe"
-            placeholder="Minimum 8 caractères"
-            value={formData.password}
-            onChange={handleChange}
-            icon={<Lock size={20} />}
-            required
-          />
+          {/* Password */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Mot de passe
+            </label>
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <Lock size={20} />
+              </div>
+              <input
+                type="password"
+                name="password"
+                placeholder="Minimum 8 caractères"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:outline-none text-gray-900 placeholder-gray-400"
+              />
+            </div>
+          </div>
 
-          <Input
-            type="password"
-            name="password_confirmation"
-            label="Confirmer le mot de passe"
-            placeholder="Répétez le mot de passe"
-            value={formData.password_confirmation}
-            onChange={handleChange}
-            icon={<Lock size={20} />}
-            required
-          />
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Confirmer le mot de passe
+            </label>
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <Lock size={20} />
+              </div>
+              <input
+                type="password"
+                name="password_confirmation"
+                placeholder="Répétez le mot de passe"
+                value={formData.password_confirmation}
+                onChange={handleChange}
+                required
+                className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:outline-none text-gray-900 placeholder-gray-400"
+              />
+            </div>
+          </div>
 
-          <Input
-            type="text"
-            name="referral_code"
-            label="Code de parrainage (optionnel)"
-            placeholder="Entrez un code si vous en avez un"
-            value={formData.referral_code}
-            onChange={handleChange}
-            icon={<Gift size={20} />}
-          />
+          {/* Referral Code */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Code de parrainage (optionnel)
+            </label>
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <Gift size={20} />
+              </div>
+              <input
+                type="text"
+                name="referral_code"
+                placeholder="Entrez un code si vous en avez un"
+                value={formData.referral_code}
+                onChange={handleChange}
+                className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:outline-none text-gray-900 placeholder-gray-400"
+              />
+            </div>
+          </div>
 
-          <Button type="submit" fullWidth loading={loading}>
-            S'inscrire
-          </Button>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+          >
+            {loading ? (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Inscription...</span>
+              </div>
+            ) : (
+              'Créer mon compte'
+            )}
+          </button>
         </form>
 
-        <div className="mt-6 text-center">
+        {/* Login Link */}
+        <div className="mt-6 text-center pb-6">
           <p className="text-gray-600">
             Déjà un compte ?{' '}
             <button
               onClick={() => navigate('/login')}
-              className="text-blue-600 hover:text-blue-700 font-semibold"
+              className="text-purple-600 hover:text-purple-700 font-bold"
             >
               Connectez-vous
             </button>
           </p>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

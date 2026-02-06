@@ -17,6 +17,11 @@ export const Goals: React.FC = () => {
   const [contributeAmount, setContributeAmount] = React.useState('');
   const [contributeGoalId, setContributeGoalId] = React.useState<number | null>(null);
   const [isProcessingContribution, setIsProcessingContribution] = React.useState(false);
+  const [showEditGoalModal, setShowEditGoalModal] = React.useState(false);
+  const [editingGoal, setEditingGoal] = React.useState<any>(null);
+  const [editGoalTitle, setEditGoalTitle] = React.useState('');
+  const [editGoalTarget, setEditGoalTarget] = React.useState('');
+  const [editGoalDeadline, setEditGoalDeadline] = React.useState('');
 
   React.useEffect(() => {
     const s = searchParams.get('screen');
@@ -192,6 +197,19 @@ export const Goals: React.FC = () => {
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-full font-bold shadow-lg"
                 >
                   💰 Contribute to Goal
+                </button>
+
+                <button
+                  onClick={() => {
+                    setEditingGoal(userGoal);
+                    setEditGoalTitle(userGoal.title || userGoal.name || '');
+                    setEditGoalTarget((userGoal.target_amount || userGoal.targetAmount || '').toString());
+                    setEditGoalDeadline(userGoal.deadline || '');
+                    setShowEditGoalModal(true);
+                  }}
+                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-4 rounded-full font-bold shadow-lg"
+                >
+                  ✏️ Edit Goal Details
                 </button>
 
                 {userGoal.currentAmount > 0 && (
@@ -1231,6 +1249,110 @@ export const Goals: React.FC = () => {
     );
   };
 
+  const handleUpdateGoal = async () => {
+    if (!editingGoal || !editGoalTitle.trim() || !editGoalTarget || !editGoalDeadline) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    try {
+      await goalsService.updateGoal(editingGoal.id, {
+        title: editGoalTitle,
+        target_amount: parseFloat(editGoalTarget),
+        deadline: editGoalDeadline
+      });
+
+      const goalsRes = await goalsService.getGoals();
+      if (goalsRes.success && goalsRes.data) {
+        setUserGoals(goalsRes.data);
+      }
+
+      setShowEditGoalModal(false);
+      setEditingGoal(null);
+      alert('Goal updated successfully!');
+    } catch (error: any) {
+      alert(error.message || 'Failed to update goal');
+    }
+  };
+
+  // Edit Goal Modal
+  const EditGoalModal = () => {
+    if (!showEditGoalModal || !editingGoal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+        <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Edit Goal</h2>
+              <button
+                onClick={() => {
+                  setShowEditGoalModal(false);
+                  setEditingGoal(null);
+                }}
+                className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition"
+              >
+                <X className="text-gray-600" size={20} />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Goal Name
+              </label>
+              <input
+                type="text"
+                value={editGoalTitle}
+                onChange={(e) => setEditGoalTitle(e.target.value)}
+                placeholder="Enter goal name"
+                className="w-full border-2 border-gray-200 rounded-xl p-4 text-gray-900 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Target Amount (XAF)
+              </label>
+              <input
+                type="number"
+                value={editGoalTarget}
+                onChange={(e) => setEditGoalTarget(e.target.value)}
+                placeholder="Enter target amount"
+                className="w-full border-2 border-gray-200 rounded-xl p-4 text-gray-900 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Deadline
+              </label>
+              <input
+                type="date"
+                value={editGoalDeadline}
+                onChange={(e) => setEditGoalDeadline(e.target.value)}
+                className="w-full border-2 border-gray-200 rounded-xl p-4 text-gray-900 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="bg-blue-50 rounded-xl p-4 mb-6">
+              <p className="text-sm text-gray-700">
+                <span className="font-bold">💡 Note:</span> You can update the goal name, target amount, and deadline. Current progress will be preserved.
+              </p>
+            </div>
+
+            <button
+              onClick={handleUpdateGoal}
+              disabled={!editGoalTitle.trim() || !editGoalTarget || !editGoalDeadline}
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-4 rounded-full font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:from-purple-700 hover:to-indigo-700 transition"
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Sub-screen router
   if (subScreen === 'goal-detail') return <GoalDetailScreen />;
   if (subScreen === 'saving-programs') return <SavingProgramsScreen />;
@@ -1243,6 +1365,7 @@ export const Goals: React.FC = () => {
     <>
       <MyGoalsScreen />
       <ContributeModal />
+      <EditGoalModal />
     </>
   );
 };

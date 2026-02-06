@@ -3,6 +3,9 @@ import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon } from 'lucide-react';
 import { useApp } from '../context';
+import { paymentsService } from '../services/payments.service';
+import { circlesService } from '../services/circles.service';
+import { walletService } from '../services/wallet.service';
 
 export const Wallet: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +18,30 @@ export const Wallet: React.FC = () => {
   const [subScreen, setSubScreen] = React.useState<string>(searchParams.get('screen') || 'payments');
   const [transactionFilter, setTransactionFilter] = React.useState('all');
   const [selectedTransaction, setSelectedTransaction] = React.useState<any>(null);
+  const [showPaymentModal, setShowPaymentModal] = React.useState(false);
+  const [selectedPayment, setSelectedPayment] = React.useState<any>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = React.useState(false);
+  const [dateFilter, setDateFilter] = React.useState('all');
+  const [startDate, setStartDate] = React.useState('');
+  const [endDate, setEndDate] = React.useState('');
+  const [walletBalance, setWalletBalance] = React.useState(0);
+  const [cardBalance, setCardBalance] = React.useState(0);
+
+  React.useEffect(() => {
+    const fetchWalletBalance = async () => {
+      try {
+        const response = await walletService.getWalletBalance();
+        if (response.success && response.data) {
+          setWalletBalance(response.data.wallet_balance || 0);
+          setCardBalance(response.data.card_balance || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching wallet balance:', error);
+      }
+    };
+
+    fetchWalletBalance();
+  }, []);
 
   React.useEffect(() => {
     const s = searchParams.get('screen');
@@ -80,6 +107,33 @@ export const Wallet: React.FC = () => {
         </div>
 
         <div className="px-6 py-6">
+          {/* Wallet Balance Card */}
+          <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-3xl p-6 mb-6 shadow-lg">
+            <p className="text-purple-200 text-sm mb-2">Available Balance</p>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <p className="text-white/80 text-xs mb-1">💳 Card Balance</p>
+                <p className="text-3xl font-bold text-white">
+                  {cardBalance.toLocaleString()}
+                  <span className="text-lg ml-1">XAF</span>
+                </p>
+              </div>
+              <div>
+                <p className="text-white/80 text-xs mb-1">👛 Wallet Balance</p>
+                <p className="text-3xl font-bold text-white">
+                  {walletBalance.toLocaleString()}
+                  <span className="text-lg ml-1">XAF</span>
+                </p>
+              </div>
+            </div>
+            <div className="pt-4 border-t border-white/20">
+              <p className="text-white/80 text-xs mb-1">Total Balance</p>
+              <p className="text-2xl font-bold text-white">
+                {(cardBalance + walletBalance).toLocaleString()} XAF
+              </p>
+            </div>
+          </div>
+
           {!hasActivePayments ? (
             // Empty state
             <div className="text-center py-12">
@@ -129,7 +183,13 @@ export const Wallet: React.FC = () => {
                             <p className="text-xs text-red-600 font-semibold">OVERDUE - {Math.abs(payment.daysUntilDue)} days late</p>
                           </div>
                         </div>
-                        <button className="w-full bg-red-600 text-white py-3 rounded-full font-bold hover:bg-red-700 transition">
+                        <button
+                          onClick={() => {
+                            setSelectedPayment(payment);
+                            setShowPaymentModal(true);
+                          }}
+                          className="w-full bg-red-600 text-white py-3 rounded-full font-bold hover:bg-red-700 transition"
+                        >
                           Pay Now
                         </button>
                       </div>
@@ -168,10 +228,10 @@ export const Wallet: React.FC = () => {
                             <p className="text-xs text-yellow-700 font-semibold">DUE IN {payment.daysUntilDue} DAYS</p>
                           </div>
                         </div>
-                        <button 
+                        <button
                           onClick={() => {
-                            setSelectedCircle(circles.find(c => c.name === payment.circleName));
-                            navigate('/circles?screen=choose-payment-method');
+                            setSelectedPayment(payment);
+                            setShowPaymentModal(true);
                           }}
                           className="w-full bg-yellow-500 text-white py-3 rounded-full font-bold hover:bg-yellow-600 transition"
                         >
@@ -588,9 +648,35 @@ export const Wallet: React.FC = () => {
 
 
   const TransactionHistoryScreen = () => {
-    const filteredTransactions = transactionFilter === 'all'
+    // Filter by type
+    let filteredTransactions = transactionFilter === 'all'
       ? transactions
       : transactions.filter(t => t.type === transactionFilter);
+
+    // Filter by date range
+    if (dateFilter === 'today') {
+      const today = new Date().toDateString();
+      filteredTransactions = filteredTransactions.filter(t =>
+        new Date(t.date).toDateString() === today
+      );
+    } else if (dateFilter === 'week') {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      filteredTransactions = filteredTransactions.filter(t =>
+        new Date(t.date) >= weekAgo
+      );
+    } else if (dateFilter === 'month') {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      filteredTransactions = filteredTransactions.filter(t =>
+        new Date(t.date) >= monthAgo
+      );
+    } else if (dateFilter === 'custom' && startDate && endDate) {
+      filteredTransactions = filteredTransactions.filter(t => {
+        const transDate = new Date(t.date);
+        return transDate >= new Date(startDate) && transDate <= new Date(endDate);
+      });
+    }
 
     const totalIncome = transactions
       .filter(t => t.status === 'completed' && t.amount > 0)
@@ -688,6 +774,62 @@ export const Wallet: React.FC = () => {
                 {filter.label} {filter.count > 0 && `(${filter.count})`}
               </button>
             ))}
+          </div>
+
+          {/* Date Range Filters */}
+          <div className="mt-4">
+            <p className="text-sm font-semibold text-gray-700 mb-2">Date Range</p>
+            <div className="flex space-x-2 overflow-x-auto pb-2">
+              {[
+                { id: 'all', label: 'All Time' },
+                { id: 'today', label: 'Today' },
+                { id: 'week', label: 'This Week' },
+                { id: 'month', label: 'This Month' },
+                { id: 'custom', label: 'Custom Range' }
+              ].map(filter => (
+                <button
+                  key={filter.id}
+                  onClick={() => {
+                    setDateFilter(filter.id);
+                    if (filter.id !== 'custom') {
+                      setStartDate('');
+                      setEndDate('');
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap transition ${
+                    dateFilter === filter.id
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom Date Range Inputs */}
+            {dateFilter === 'custom' && (
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">End Date</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1503,7 +1645,103 @@ export const Wallet: React.FC = () => {
     </div>
   );
 
+  const handlePayment = async () => {
+    if (!selectedPayment) return;
 
+    setIsProcessingPayment(true);
+    try {
+      const circle = activeLikeLemba.find(c => c.name === selectedPayment.circleName);
+      if (!circle) {
+        alert('Circle not found');
+        return;
+      }
+
+      await paymentsService.makeContribution({
+        like_lemba_id: circle.id,
+        amount: selectedPayment.amount,
+        payment_method: 'wallet'
+      });
+
+      // Refresh circles data
+      const circlesRes = await circlesService.getMyCircles();
+      if (circlesRes.success && circlesRes.data) {
+        // Update context with fresh data
+        alert('Payment successful!');
+      }
+
+      setShowPaymentModal(false);
+      setSelectedPayment(null);
+    } catch (error: any) {
+      alert(error.message || 'Failed to process payment');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  // Payment Modal
+  const PaymentModal = () => {
+    if (!showPaymentModal || !selectedPayment) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+        <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Confirm Payment</h2>
+              <button
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setSelectedPayment(null);
+                }}
+                className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition"
+              >
+                <X className="text-gray-600" size={20} />
+              </button>
+            </div>
+
+            <div className="bg-blue-50 rounded-2xl p-6 mb-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <span className="text-3xl">{selectedPayment.type === 'saving' ? '🌱' : '👥'}</span>
+                <div>
+                  <p className="text-sm text-gray-600">Payment to</p>
+                  <p className="text-xl font-bold text-gray-900">{selectedPayment.circleName}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Amount</p>
+                  <p className="text-2xl font-bold text-blue-600">{selectedPayment.amount.toLocaleString()} XAF</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Due Date</p>
+                  <p className="text-sm font-bold text-gray-900">
+                    {selectedPayment.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 rounded-xl p-4 mb-6">
+              <p className="text-sm text-gray-700">
+                <span className="font-bold">💳 Payment Method:</span> Wallet Balance
+              </p>
+              <p className="text-sm text-gray-700 mt-2">
+                <span className="font-bold">⚠️ Note:</span> This payment will be deducted from your wallet balance.
+              </p>
+            </div>
+
+            <button
+              onClick={handlePayment}
+              disabled={isProcessingPayment}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-full font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-700 hover:to-indigo-700 transition"
+            >
+              {isProcessingPayment ? 'Processing...' : `Pay ${selectedPayment.amount.toLocaleString()} XAF`}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Sub-screen router
   if (subScreen === 'payment-calendar') return <PaymentCalendarScreen />;
@@ -1516,5 +1754,11 @@ export const Wallet: React.FC = () => {
   if (subScreen === 'payment-policy') return <PaymentPolicyScreen />;
   if (subScreen === 'payment-settings') return <PaymentSettingsScreen />;
   if (subScreen === 'saved-cards') return <SavedCardsScreen />;
-  return <PaymentsScreen />;
+
+  return (
+    <>
+      <PaymentsScreen />
+      <PaymentModal />
+    </>
+  );
 };
