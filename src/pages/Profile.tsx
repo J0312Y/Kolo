@@ -140,8 +140,8 @@ export const Profile: React.FC = () => {
             <ChevronRight className="text-gray-400" size={24} />
           </button>
 
-          <button 
-            onClick={() => setSubScreen('referral')}
+          <button
+            onClick={() => navigate('/circles?screen=referral')}
             className="flex items-center justify-between w-full py-4"
           >
             <div className="flex items-center space-x-3">
