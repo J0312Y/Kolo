@@ -3872,6 +3872,146 @@ export const Circles: React.FC = () => {
     </div>
   );
 
+  const ScanNationalIdScreen = () => {
+    const [idUploaded, setIdUploaded] = useState(false);
+
+    const handleFileUpload = () => {
+      // Simulate file upload
+      setIdUploaded(true);
+    };
+
+    const handleComplete = () => {
+      // Add the circle to active circles
+      const newCircle = {
+        id: Date.now(),
+        name: likeLembaName || `Circle ${activeLikeLemba.length + 1}`,
+        amount: parseInt(circleAmount || likeLembaAmount || '50000'),
+        members: likeLembaMembers || 12,
+        duration: circleDuration?.months || likeLembaDuration || 12,
+        monthlyPayment: circleDuration?.monthly || (parseInt(likeLembaAmount || '50000') / (likeLembaDuration || 12)),
+        nextPayment: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        progress: 0,
+        type: likeLembaName ? 'created' : 'joined',
+        status: 'active',
+        category: 'tontine',
+        slot: selectedSlot || 1,
+        payoutMethod: selectedPayoutMethod || 'digital'
+      };
+
+      setActiveLikeLemba([...activeLikeLemba, newCircle]);
+
+      // Clear form data
+      setCircleAmount('');
+      setCircleDuration(null);
+      setSelectedSlot(null);
+      setSelectedPayoutMethod('');
+      setLikeLembaName('');
+      setLikeLembaAmount('');
+      setLikeLembaDuration(0);
+      setLikeLembaMembers(5);
+
+      // Show success screen
+      setSubScreen('likelemba-created');
+    };
+
+    return (
+      <div className="flex-1 overflow-y-auto pb-32 bg-white">
+        <div className="px-6 py-4 flex items-center space-x-4 border-b border-gray-200">
+          <button onClick={() => setSubScreen('payout-method-selection')}>
+            <ArrowLeft size={24} />
+          </button>
+          <h1 className="text-2xl font-bold">Verify Identity</h1>
+        </div>
+
+        <div className="px-6 py-6">
+          <div className="bg-blue-50 rounded-2xl p-4 flex items-start space-x-3 mb-6">
+            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <span className="text-white text-xs">ℹ</span>
+            </div>
+            <p className="text-gray-700 text-sm">
+              We need to verify your identity to comply with financial regulations. Your information is secure and encrypted.
+            </p>
+          </div>
+
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Upload National ID</h3>
+          <p className="text-gray-600 mb-6">
+            Please upload a clear photo of your national ID card or passport
+          </p>
+
+          {!idUploaded ? (
+            <div className="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center mb-6">
+              <div className="mb-4">
+                <span className="text-6xl">📄</span>
+              </div>
+              <h4 className="font-bold text-gray-900 mb-2">Upload ID Document</h4>
+              <p className="text-gray-600 text-sm mb-4">
+                Take a photo or select from gallery
+              </p>
+              <button
+                onClick={handleFileUpload}
+                className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold"
+              >
+                Upload Document
+              </button>
+            </div>
+          ) : (
+            <div className="border-2 border-green-300 bg-green-50 rounded-2xl p-6 mb-6">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                  <CheckCircle2 className="text-white" size={24} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">Document Uploaded</h4>
+                  <p className="text-gray-600 text-sm">national_id_front.jpg</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIdUploaded(false)}
+                className="text-blue-600 font-semibold text-sm"
+              >
+                Upload different document
+              </button>
+            </div>
+          )}
+
+          <div className="space-y-4 mb-6">
+            <h3 className="text-lg font-bold text-gray-900">Requirements</h3>
+            <div className="flex items-start space-x-3">
+              <CheckCircle2 className="text-green-600 flex-shrink-0 mt-1" size={20} />
+              <p className="text-gray-600 text-sm">Clear and readable photo</p>
+            </div>
+            <div className="flex items-start space-x-3">
+              <CheckCircle2 className="text-green-600 flex-shrink-0 mt-1" size={20} />
+              <p className="text-gray-600 text-sm">All corners of the document visible</p>
+            </div>
+            <div className="flex items-start space-x-3">
+              <CheckCircle2 className="text-green-600 flex-shrink-0 mt-1" size={20} />
+              <p className="text-gray-600 text-sm">Document must be valid (not expired)</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="fixed bottom-0 left-0 right-0 bg-white px-6 py-6 border-t border-gray-200 max-w-md mx-auto">
+          <button
+            onClick={handleComplete}
+            disabled={!idUploaded}
+            className={`w-full py-4 rounded-full font-bold text-lg mb-3 ${
+              idUploaded ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+            }`}
+          >
+            Complete Registration
+          </button>
+          <button
+            onClick={handleComplete}
+            className="w-full bg-gray-100 text-gray-900 py-4 rounded-full font-bold text-lg"
+          >
+            Skip for now
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const BottomNav = () => {
     const tabs = [
       { id: 'home', icon: Home, label: 'Home' },
@@ -4057,6 +4197,7 @@ export const Circles: React.FC = () => {
   if (subScreen === 'likelemba-created') return <LikeLembaCreatedScreen />;
   if (subScreen === 'likelemba-details') return <LikeLembaDetailsScreen />;
   if (subScreen === 'digital-wallet-form') return <DigitalWalletFormScreen />;
+  if (subScreen === 'scan-national-id') return <ScanNationalIdScreen />;
 
   return (
     <>
