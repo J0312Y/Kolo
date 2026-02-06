@@ -5,6 +5,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gi
 import { useApp } from '../context';
 import { paymentsService } from '../services/payments.service';
 import { circlesService } from '../services/circles.service';
+import { walletService } from '../services/wallet.service';
 
 export const Wallet: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +21,27 @@ export const Wallet: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = React.useState(false);
   const [selectedPayment, setSelectedPayment] = React.useState<any>(null);
   const [isProcessingPayment, setIsProcessingPayment] = React.useState(false);
+  const [dateFilter, setDateFilter] = React.useState('all');
+  const [startDate, setStartDate] = React.useState('');
+  const [endDate, setEndDate] = React.useState('');
+  const [walletBalance, setWalletBalance] = React.useState(0);
+  const [cardBalance, setCardBalance] = React.useState(0);
+
+  React.useEffect(() => {
+    const fetchWalletBalance = async () => {
+      try {
+        const response = await walletService.getWalletBalance();
+        if (response.success && response.data) {
+          setWalletBalance(response.data.wallet_balance || 0);
+          setCardBalance(response.data.card_balance || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching wallet balance:', error);
+      }
+    };
+
+    fetchWalletBalance();
+  }, []);
 
   React.useEffect(() => {
     const s = searchParams.get('screen');
@@ -85,6 +107,33 @@ export const Wallet: React.FC = () => {
         </div>
 
         <div className="px-6 py-6">
+          {/* Wallet Balance Card */}
+          <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-3xl p-6 mb-6 shadow-lg">
+            <p className="text-purple-200 text-sm mb-2">Available Balance</p>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <p className="text-white/80 text-xs mb-1">💳 Card Balance</p>
+                <p className="text-3xl font-bold text-white">
+                  {cardBalance.toLocaleString()}
+                  <span className="text-lg ml-1">XAF</span>
+                </p>
+              </div>
+              <div>
+                <p className="text-white/80 text-xs mb-1">👛 Wallet Balance</p>
+                <p className="text-3xl font-bold text-white">
+                  {walletBalance.toLocaleString()}
+                  <span className="text-lg ml-1">XAF</span>
+                </p>
+              </div>
+            </div>
+            <div className="pt-4 border-t border-white/20">
+              <p className="text-white/80 text-xs mb-1">Total Balance</p>
+              <p className="text-2xl font-bold text-white">
+                {(cardBalance + walletBalance).toLocaleString()} XAF
+              </p>
+            </div>
+          </div>
+
           {!hasActivePayments ? (
             // Empty state
             <div className="text-center py-12">
@@ -599,9 +648,35 @@ export const Wallet: React.FC = () => {
 
 
   const TransactionHistoryScreen = () => {
-    const filteredTransactions = transactionFilter === 'all'
+    // Filter by type
+    let filteredTransactions = transactionFilter === 'all'
       ? transactions
       : transactions.filter(t => t.type === transactionFilter);
+
+    // Filter by date range
+    if (dateFilter === 'today') {
+      const today = new Date().toDateString();
+      filteredTransactions = filteredTransactions.filter(t =>
+        new Date(t.date).toDateString() === today
+      );
+    } else if (dateFilter === 'week') {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      filteredTransactions = filteredTransactions.filter(t =>
+        new Date(t.date) >= weekAgo
+      );
+    } else if (dateFilter === 'month') {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      filteredTransactions = filteredTransactions.filter(t =>
+        new Date(t.date) >= monthAgo
+      );
+    } else if (dateFilter === 'custom' && startDate && endDate) {
+      filteredTransactions = filteredTransactions.filter(t => {
+        const transDate = new Date(t.date);
+        return transDate >= new Date(startDate) && transDate <= new Date(endDate);
+      });
+    }
 
     const totalIncome = transactions
       .filter(t => t.status === 'completed' && t.amount > 0)
@@ -699,6 +774,62 @@ export const Wallet: React.FC = () => {
                 {filter.label} {filter.count > 0 && `(${filter.count})`}
               </button>
             ))}
+          </div>
+
+          {/* Date Range Filters */}
+          <div className="mt-4">
+            <p className="text-sm font-semibold text-gray-700 mb-2">Date Range</p>
+            <div className="flex space-x-2 overflow-x-auto pb-2">
+              {[
+                { id: 'all', label: 'All Time' },
+                { id: 'today', label: 'Today' },
+                { id: 'week', label: 'This Week' },
+                { id: 'month', label: 'This Month' },
+                { id: 'custom', label: 'Custom Range' }
+              ].map(filter => (
+                <button
+                  key={filter.id}
+                  onClick={() => {
+                    setDateFilter(filter.id);
+                    if (filter.id !== 'custom') {
+                      setStartDate('');
+                      setEndDate('');
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap transition ${
+                    dateFilter === filter.id
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom Date Range Inputs */}
+            {dateFilter === 'custom' && (
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">End Date</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

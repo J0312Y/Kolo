@@ -1519,6 +1519,39 @@ export const Profile: React.FC = () => {
 
 
   const SecurityLogsScreen = () => {
+    const [logFilter, setLogFilter] = React.useState('all');
+    const [logDateFilter, setLogDateFilter] = React.useState('all');
+
+    // Filter logs by action type
+    let filteredLogs = logFilter === 'all'
+      ? securityLogs
+      : securityLogs.filter(log => {
+          if (logFilter === 'login') return log.action === 'Login' || log.action === 'Failed Login';
+          if (logFilter === 'payment') return log.action === 'Payment';
+          if (logFilter === 'password') return log.action === 'Password Change';
+          return true;
+        });
+
+    // Filter logs by date
+    if (logDateFilter === 'today') {
+      const today = new Date().toDateString();
+      filteredLogs = filteredLogs.filter(log =>
+        new Date(log.timestamp).toDateString() === today
+      );
+    } else if (logDateFilter === 'week') {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      filteredLogs = filteredLogs.filter(log =>
+        new Date(log.timestamp) >= weekAgo
+      );
+    } else if (logDateFilter === 'month') {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      filteredLogs = filteredLogs.filter(log =>
+        new Date(log.timestamp) >= monthAgo
+      );
+    }
+
     const formatTime = (timestamp) => {
       const date = new Date(timestamp);
       const now = new Date();
@@ -1545,12 +1578,69 @@ export const Profile: React.FC = () => {
         </div>
 
         <div className="px-6 py-6">
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 mb-4">
             Review recent activity on your account
           </p>
 
-          <div className="space-y-3">
-            {securityLogs.map((log) => (
+          {/* Activity Type Filters */}
+          <div className="mb-4">
+            <p className="text-sm font-semibold text-gray-700 mb-2">Activity Type</p>
+            <div className="flex space-x-2 overflow-x-auto pb-2">
+              {[
+                { id: 'all', label: 'All Activity', count: securityLogs.length },
+                { id: 'login', label: 'Login Attempts', count: securityLogs.filter(l => l.action.includes('Login')).length },
+                { id: 'payment', label: 'Payments', count: securityLogs.filter(l => l.action === 'Payment').length },
+                { id: 'password', label: 'Password Changes', count: securityLogs.filter(l => l.action === 'Password Change').length }
+              ].map(filter => (
+                <button
+                  key={filter.id}
+                  onClick={() => setLogFilter(filter.id)}
+                  className={`px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap transition ${
+                    logFilter === filter.id
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  {filter.label} ({filter.count})
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Date Range Filters */}
+          <div className="mb-6">
+            <p className="text-sm font-semibold text-gray-700 mb-2">Time Period</p>
+            <div className="flex space-x-2 overflow-x-auto pb-2">
+              {[
+                { id: 'all', label: 'All Time' },
+                { id: 'today', label: 'Today' },
+                { id: 'week', label: 'This Week' },
+                { id: 'month', label: 'This Month' }
+              ].map(filter => (
+                <button
+                  key={filter.id}
+                  onClick={() => setLogDateFilter(filter.id)}
+                  className={`px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap transition ${
+                    logDateFilter === filter.id
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {filteredLogs.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-gray-900 font-bold text-xl mb-2">No activity found</h3>
+              <p className="text-gray-500">Try adjusting your filters</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredLogs.map((log) => (
               <div 
                 key={log.id}
                 className={`bg-white rounded-2xl p-4 border-2 ${
@@ -1607,7 +1697,8 @@ export const Profile: React.FC = () => {
                 )}
               </div>
             ))}
-          </div>
+            </div>
+          )}
 
           {/* Info */}
           <div className="bg-blue-50 rounded-2xl p-4 mt-6 border border-blue-200">
