@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon } from 'lucide-react';
 import { useApp } from '../context';
+import { notificationsService } from '../services/notifications.service';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -151,7 +152,7 @@ export const Home: React.FC = () => {
                 
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <p className="text-3xl font-bold text-gray-900">{parseInt(circleAmount).toLocaleString()} <span className="text-xl text-gray-500">XAF</span></p>
+                    <p className="text-3xl font-bold text-gray-900">{circleAmount ? parseInt(circleAmount).toLocaleString() : '0'} <span className="text-xl text-gray-500">XAF</span></p>
                     <p className="text-blue-600 font-bold">{circleDuration?.monthly.toLocaleString() || '1,500'} XAF <span className="text-gray-500 font-normal text-sm">Monthly</span></p>
                   </div>
                   <div className="text-right">
@@ -558,20 +559,31 @@ export const Home: React.FC = () => {
 
 
   const NotificationsScreen = () => {
+    const [notificationFilter, setNotificationFilter] = React.useState('all');
     const unreadCount = notifications.filter(n => !n.read).length;
-    
+
     const filteredNotifications = notificationFilter === 'all' 
       ? notifications 
       : notifications.filter(n => n.type === notificationFilter);
 
-    const markAsRead = (id) => {
-      setNotifications(notifications.map(n => 
-        n.id === id ? { ...n, read: true } : n
-      ));
+    const markAsRead = async (id) => {
+      try {
+        await notificationsService.markAsRead(id);
+        setNotifications(notifications.map(n =>
+          n.id === id ? { ...n, read: true } : n
+        ));
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
     };
 
-    const markAllAsRead = () => {
-      setNotifications(notifications.map(n => ({ ...n, read: true })));
+    const markAllAsRead = async () => {
+      try {
+        await notificationsService.markAllAsRead();
+        setNotifications(notifications.map(n => ({ ...n, read: true })));
+      } catch (error) {
+        console.error('Error marking all as read:', error);
+      }
     };
 
     const getTimeAgo = (timestamp) => {

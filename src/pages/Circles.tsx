@@ -3,6 +3,8 @@ import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon, MoreVertical, Smile, Send } from 'lucide-react';
 import { useApp } from '../context';
+import { circlesService } from '../services/circles.service';
+import { notificationsService } from '../services/notifications.service';
 
 const GroupNameInput = React.memo(({ defaultValue, onBlur }) => {
   const inputRef = React.useRef(null);
@@ -75,7 +77,7 @@ export const Circles: React.FC = () => {
   const [subScreen, setSubScreen] = React.useState<string>(searchParams.get('screen') || 'circles');
   const [circlesTab, setCirclesTab] = React.useState<'active' | 'finished'>('active');
   const [selectedPayoutMethod, setSelectedPayoutMethod] = React.useState<string | null>(null);
-  const [slotTab, setSlotTab] = React.useState('all');
+  const [slotTab, setSlotTab] = React.useState('first');
   const [showCorporateModal, setShowCorporateModal] = React.useState(false);
   const [corporateStep, setCorporateStep] = React.useState(1);
   const [currentOfferIndex, setCurrentOfferIndex] = React.useState(0);
@@ -197,24 +199,83 @@ export const Circles: React.FC = () => {
                   </div>
 
                   {circlesTab === 'active' && (
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={() => {
-                          setSelectedLikeLemba(circle);
-                          setSubScreen('likelemba-details');
-                        }}
-                        className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold text-sm"
-                      >
-                        View Details
-                      </button>
-                      {circle.type === 'created' && (
-                        <button 
-                          onClick={handleCopyCode}
-                          className="px-4 bg-blue-100 text-blue-600 rounded-xl font-semibold"
+                    <div className="space-y-2">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            setSelectedLikeLemba(circle);
+                            setSubScreen('likelemba-details');
+                          }}
+                          className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold text-sm"
                         >
-                          {copied ? <Check size={20} /> : <Copy size={20} />}
+                          View Details
                         </button>
-                      )}
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await circlesService.getMembers(circle.id);
+                              if (response.success && response.data) {
+                                alert(`Members (${response.data.length}):\n${response.data.map(m => `${m.user?.first_name || 'User'} ${m.user?.last_name || ''} - Slot ${m.slot_number || 'TBD'}`).join('\n')}`);
+                              }
+                            } catch (error: any) {
+                              alert(error.message || 'Failed to fetch members');
+                            }
+                          }}
+                          className="px-4 bg-purple-100 text-purple-600 rounded-xl font-semibold"
+                        >
+                          <Users size={20} />
+                        </button>
+                        {circle.type === 'created' && (
+                          <button
+                            onClick={handleCopyCode}
+                            className="px-4 bg-blue-100 text-blue-600 rounded-xl font-semibold"
+                          >
+                            {copied ? <Check size={20} /> : <Copy size={20} />}
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={async () => {
+                            if (!confirm('Are you sure you want to leave this circle?')) return;
+                            try {
+                              await circlesService.leaveCircle(circle.id);
+                              const circlesRes = await circlesService.getMyCircles();
+                              if (circlesRes.success && circlesRes.data) {
+                                const active = circlesRes.data.filter((c: any) => c.status === 'active' || c.status === 'pending');
+                                setActiveLikeLemba(active);
+                              }
+                              alert('Successfully left the circle');
+                            } catch (error: any) {
+                              alert(error.message || 'Failed to leave circle');
+                            }
+                          }}
+                          className="flex-1 bg-orange-100 text-orange-600 py-2 rounded-xl font-semibold text-sm"
+                        >
+                          Leave Circle
+                        </button>
+                        {circle.type === 'created' && (
+                          <button
+                            onClick={async () => {
+                              if (!confirm('Are you sure you want to delete this circle? This action cannot be undone.')) return;
+                              try {
+                                await circlesService.deleteCircle(circle.id);
+                                const circlesRes = await circlesService.getMyCircles();
+                                if (circlesRes.success && circlesRes.data) {
+                                  const active = circlesRes.data.filter((c: any) => c.status === 'active' || c.status === 'pending');
+                                  setActiveLikeLemba(active);
+                                }
+                                alert('Circle deleted successfully');
+                              } catch (error: any) {
+                                alert(error.message || 'Failed to delete circle');
+                              }
+                            }}
+                            className="flex-1 bg-red-100 text-red-600 py-2 rounded-xl font-semibold text-sm"
+                          >
+                            Delete Circle
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -1357,14 +1418,24 @@ export const Circles: React.FC = () => {
       ? notifications 
       : notifications.filter(n => n.type === notificationFilter);
 
-    const markAsRead = (id) => {
-      setNotifications(notifications.map(n => 
-        n.id === id ? { ...n, read: true } : n
-      ));
+    const markAsRead = async (id) => {
+      try {
+        await notificationsService.markAsRead(id);
+        setNotifications(notifications.map(n =>
+          n.id === id ? { ...n, read: true } : n
+        ));
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
     };
 
-    const markAllAsRead = () => {
-      setNotifications(notifications.map(n => ({ ...n, read: true })));
+    const markAllAsRead = async () => {
+      try {
+        await notificationsService.markAllAsRead();
+        setNotifications(notifications.map(n => ({ ...n, read: true })));
+      } catch (error) {
+        console.error('Error marking all as read:', error);
+      }
     };
 
     const getTimeAgo = (timestamp) => {
@@ -1502,6 +1573,25 @@ export const Circles: React.FC = () => {
     if (!selectedLikeLemba) return null;
 
     const messages = groupChats[selectedLikeLemba.name] || [];
+
+    // Fetch chat messages on mount
+    React.useEffect(() => {
+      const fetchChatMessages = async () => {
+        if (!selectedLikeLemba?.id) return;
+        try {
+          const response = await circlesService.getChatMessages(selectedLikeLemba.id);
+          if (response.success && response.data) {
+            setGroupChats(prev => ({
+              ...prev,
+              [selectedLikeLemba.name]: response.data
+            }));
+          }
+        } catch (error) {
+          console.error('Error fetching chat messages:', error);
+        }
+      };
+      fetchChatMessages();
+    }, [selectedLikeLemba?.id]);
     const memberCount = selectedLikeLemba.currentMembers || selectedLikeLemba.totalMembers || 0;
 
     const formatTime = (timestamp) => {
@@ -1630,23 +1720,25 @@ export const Circles: React.FC = () => {
               ref={chatInputRef}
               type="text"
               defaultValue=""
-              onKeyPress={(e) => {
+              onKeyPress={async (e) => {
                 if (e.key === 'Enter') {
                   const message = e.target.value;
                   if (message.trim()) {
-                    const newMessage = {
-                      id: Date.now(),
-                      sender: 'You',
-                      message: message,
-                      timestamp: new Date().toISOString(),
-                      isMe: true,
-                      type: 'message'
-                    };
-                    setGroupChats(prev => ({
-                      ...prev,
-                      [selectedLikeLemba.name]: [...(prev[selectedLikeLemba.name] || []), newMessage]
-                    }));
-                    e.target.value = '';
+                    try {
+                      await circlesService.sendChatMessage(selectedLikeLemba.id, message);
+                      // Refresh messages
+                      const response = await circlesService.getChatMessages(selectedLikeLemba.id);
+                      if (response.success && response.data) {
+                        setGroupChats(prev => ({
+                          ...prev,
+                          [selectedLikeLemba.name]: response.data
+                        }));
+                      }
+                      e.target.value = '';
+                    } catch (error) {
+                      console.error('Error sending message:', error);
+                      alert('Failed to send message. Please try again.');
+                    }
                   }
                 }
               }}
@@ -1654,23 +1746,25 @@ export const Circles: React.FC = () => {
               className="flex-1 bg-gray-100 rounded-full px-4 py-3 outline-none text-gray-900 placeholder-gray-500"
             />
 
-            <button 
-              onClick={() => {
+            <button
+              onClick={async () => {
                 const message = chatInputRef.current?.value;
                 if (message && message.trim()) {
-                  const newMessage = {
-                    id: Date.now(),
-                    sender: 'You',
-                    message: message,
-                    timestamp: new Date().toISOString(),
-                    isMe: true,
-                    type: 'message'
-                  };
-                  setGroupChats(prev => ({
-                    ...prev,
-                    [selectedLikeLemba.name]: [...(prev[selectedLikeLemba.name] || []), newMessage]
-                  }));
-                  chatInputRef.current.value = '';
+                  try {
+                    await circlesService.sendChatMessage(selectedLikeLemba.id, message);
+                    // Refresh messages
+                    const response = await circlesService.getChatMessages(selectedLikeLemba.id);
+                    if (response.success && response.data) {
+                      setGroupChats(prev => ({
+                        ...prev,
+                        [selectedLikeLemba.name]: response.data
+                      }));
+                    }
+                    chatInputRef.current.value = '';
+                  } catch (error) {
+                    console.error('Error sending message:', error);
+                    alert('Failed to send message. Please try again.');
+                  }
                 }
               }}
               className="p-3 rounded-full bg-blue-600 text-white"
@@ -2528,25 +2622,28 @@ export const Circles: React.FC = () => {
       </div>
 
       <div className="fixed bottom-20 left-0 right-0 bg-white px-6 py-4 border-t border-gray-200 max-w-md mx-auto">
-        <button 
-          onClick={() => {
-            // Add the joined Likelemba to active circles
-            addLikeLemba({
-              name: joinCode.replace(/_2026$/, '').replace(/_/g, ' '),
-              amount: '50000',
-              duration: 6,
-              totalMembers: 6,
-              currentMembers: 2,
-              type: 'joined',
-              inviteCode: joinCode,
-              monthsCompleted: 0
-            });
-            
-            // Reset join code
-            setJoinCode('');
-            
-            // Navigate to Circles screen
-            navigate('/circles');
+        <button
+          onClick={async () => {
+            try {
+              // Call backend to join with code
+              await circlesService.joinWithCode(joinCode);
+
+              // Refresh circles from backend
+              const circlesRes = await circlesService.getMyCircles();
+              if (circlesRes.success && circlesRes.data) {
+                const active = circlesRes.data.filter((c: any) => c.status === 'active' || c.status === 'pending');
+                setActiveLikeLemba(active);
+              }
+
+              // Reset join code
+              setJoinCode('');
+
+              alert('Successfully joined the circle!');
+              navigate('/circles');
+            } catch (error: any) {
+              console.error('Error joining circle:', error);
+              alert(error.message || 'Failed to join circle. Please try again.');
+            }
             }}
           className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-full font-bold text-lg shadow-lg"
         >
@@ -3103,29 +3200,39 @@ export const Circles: React.FC = () => {
       </div>
 
       <div className="fixed bottom-20 left-0 right-0 bg-white px-6 py-4 border-t border-gray-200 max-w-md mx-auto">
-        <button 
-          onClick={() => {
-            // Add the created Likelemba to active circles
-            addLikeLemba({
-              name: likeLembaName,
-              amount: likeLembaAmount,
-              duration: likeLembaDuration.months,
-              totalMembers: likeLembaMembers,
-              currentMembers: 1,
-              type: 'created',
-              description: likeLembaDescription,
-              inviteCode: `${likeLembaName.toUpperCase().replace(/\s/g, '_')}_2026`,
-              monthsCompleted: 0
-            });
-            
-            // Reset form
-            setLikeLembaName('');
-            setLikeLembaAmount('');
-            setLikeLembaDuration(null);
-            setLikeLembaDescription('');
-            
-            // Navigate to Circles screen
-            navigate('/circles');
+        <button
+          onClick={async () => {
+            try {
+              // Call backend to create circle
+              await circlesService.createCircle({
+                name: likeLembaName,
+                description: likeLembaDescription,
+                contribution_amount: parseInt(likeLembaAmount),
+                frequency: 'monthly',
+                total_slots: parseInt(likeLembaMembers),
+                visibility: 'private',
+                auto_start: true
+              });
+
+              // Refresh circles from backend
+              const circlesRes = await circlesService.getMyCircles();
+              if (circlesRes.success && circlesRes.data) {
+                const active = circlesRes.data.filter((c: any) => c.status === 'active' || c.status === 'pending');
+                setActiveLikeLemba(active);
+              }
+
+              // Reset form
+              setLikeLembaName('');
+              setLikeLembaAmount('');
+              setLikeLembaDuration(null);
+              setLikeLembaDescription('');
+
+              alert('Circle created successfully!');
+              navigate('/circles');
+            } catch (error: any) {
+              console.error('Error creating circle:', error);
+              alert(error.message || 'Failed to create circle. Please try again.');
+            }
             }}
           className="w-full bg-blue-600 text-white py-4 rounded-full font-bold text-lg"
         >

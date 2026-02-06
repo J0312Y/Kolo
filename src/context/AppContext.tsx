@@ -1,5 +1,13 @@
 // @ts-nocheck
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { circlesService } from '../services/circles.service';
+import { goalsService } from '../services/goals.service';
+import { walletService } from '../services/wallet.service';
+import { dashboardService } from '../services/dashboard.service';
+import { transactionsService } from '../services/transactions.service';
+import { notificationsService } from '../services/notifications.service';
+import { supportService } from '../services/support.service';
 
 interface AppContextType {
   // User info
@@ -112,6 +120,11 @@ interface AppContextType {
   setCopied: (b: boolean) => void;
   handleCopyCode: () => void;
   copyToClipboard: (text: string) => boolean;
+
+  // Loading & Error
+  loading: boolean;
+  error: string | null;
+  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -206,6 +219,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Utility
   const [copied, setCopied] = useState(false);
 
+  // Loading & Error
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Auth context
+  const { user } = useAuth();
+
   // Static data
   const circles = [
     { name: 'LITE SAVER', amount: 3000, bonus: 600 },
@@ -217,94 +237,71 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     { months: 24, monthly: 125 }
   ];
 
-  // Demo data seeding
-  React.useEffect(() => {
-    if (activeLikeLemba.length === 0 && finishedLikeLemba.length === 0) {
-      setActiveLikeLemba([{
-        id: 1, name: 'Demo Family Savings', amount: '75000', duration: 6,
-        totalMembers: 6, currentMembers: 4, type: 'joined',
-        inviteCode: 'DEMO_FAMILY_SAVINGS_2026', monthsCompleted: 2,
-        joinedDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(), status: 'active'
-      }]);
-      setFinishedLikeLemba([{
-        id: 2, name: 'Friends Circle 2025', amount: '100000', duration: 12,
-        totalMembers: 12, currentMembers: 12, type: 'created',
-        inviteCode: 'FRIENDS_CIRCLE_2025', monthsCompleted: 12,
-        joinedDate: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
-        completedDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), status: 'finished'
-      }]);
-    }
+  // Fetch real data from backend
+  const fetchUserData = useCallback(async () => {
+    if (!user) return;
 
-    if (notifications.length === 0) {
-      setNotifications([
-        { id: 1, type: 'payment', title: 'Payment Due Soon', message: 'Your monthly payment of 12,500 XAF for Demo Family Savings is due in 3 days.', time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), read: false, icon: '💰', color: 'blue' },
-        { id: 2, type: 'group', title: 'New Member Joined', message: 'Marie Nkulu joined your group "Demo Family Savings"', time: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), read: false, icon: '👥', color: 'green' },
-        { id: 3, type: 'payout', title: 'Payout Received', message: 'You received 75,000 XAF from Demo Family Savings', time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), read: true, icon: '🎉', color: 'purple' },
-        { id: 4, type: 'system', title: 'Security Alert', message: 'New login detected from Brazzaville. If this wasn\'t you, please secure your account.', time: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), read: true, icon: '🔒', color: 'red' },
-        { id: 5, type: 'group', title: 'Group Chat Message', message: 'Jean posted in Demo Family Savings: "Payment confirmed for this month"', time: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), read: true, icon: '💬', color: 'blue' },
-        { id: 6, type: 'payment', title: 'Payment Confirmed', message: 'Your payment of 12,500 XAF has been successfully processed.', time: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), read: true, icon: '✅', color: 'green' }
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Fetch all data in parallel
+      const [circlesRes, goalsRes, transactionsRes, notificationsRes, supportTicketsRes] = await Promise.all([
+        circlesService.getMyCircles().catch(() => ({ success: false, data: [] })),
+        goalsService.getGoals().catch(() => ({ success: false, data: [] })),
+        transactionsService.getAll().catch(() => ({ success: false, data: [] })),
+        notificationsService.getAll().catch(() => ({ success: false, data: [] })),
+        supportService.getTickets().catch(() => ({ success: false, data: [] }))
       ]);
-    }
 
-    if (transactions.length === 0) {
-      setTransactions([
-        { id: 1, type: 'payment', status: 'completed', title: 'Monthly Payment', description: 'Demo Family Savings - Month 2', amount: -12500, date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), method: 'Mobile Money', reference: 'TXN001234567', category: 'Likelemba' },
-        { id: 2, type: 'payout', status: 'completed', title: 'Payout Received', description: 'Demo Family Savings - Your Turn', amount: 75000, date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), method: 'Bank Transfer', reference: 'TXN001234566', category: 'Likelemba' },
-        { id: 3, type: 'payment', status: 'pending', title: 'Monthly Payment', description: 'Demo Family Savings - Month 3', amount: -12500, date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), method: 'Mobile Money', reference: 'TXN001234568', category: 'Likelemba' },
-        { id: 4, type: 'payment', status: 'completed', title: 'Monthly Payment', description: 'Demo Family Savings - Month 1', amount: -12500, date: new Date(Date.now() - 32 * 24 * 60 * 60 * 1000).toISOString(), method: 'Mobile Money', reference: 'TXN001234565', category: 'Likelemba' },
-        { id: 5, type: 'fee', status: 'completed', title: 'Admin Fee', description: 'Demo Family Savings - Setup', amount: -630, date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(), method: 'Mobile Money', reference: 'TXN001234564', category: 'Fees' },
-        { id: 6, type: 'refund', status: 'completed', title: 'Refund', description: 'Duplicate payment refund', amount: 12500, date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(), method: 'Mobile Money', reference: 'TXN001234563', category: 'Refund' },
-        { id: 7, type: 'payment', status: 'failed', title: 'Monthly Payment', description: 'Friends Circle 2025 - Month 10', amount: -8333, date: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString(), method: 'Bank Transfer', reference: 'TXN001234562', category: 'Likelemba' }
-      ]);
-    }
+      // Process circles
+      if (circlesRes.success && circlesRes.data) {
+        const active = circlesRes.data.filter((c: any) => c.status === 'active' || c.status === 'pending');
+        const finished = circlesRes.data.filter((c: any) => c.status === 'completed');
+        setActiveLikeLemba(active);
+        setFinishedLikeLemba(finished);
+      }
 
-    if (Object.keys(groupChats).length === 0) {
-      setGroupChats({
-        'Demo Family Savings': [
-          { id: 1, sender: 'Admin', message: 'Welcome everyone to Demo Family Savings! 👋', timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), isMe: false, type: 'system' },
-          { id: 2, sender: 'You', message: 'Thanks for creating this group! Excited to start saving together.', timestamp: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(), isMe: true, type: 'message' },
-          { id: 3, sender: 'Marie Nkulu', message: 'Happy to be part of this! When is the first payment due?', timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), isMe: false, type: 'message' },
-          { id: 4, sender: 'Admin', message: 'First payment is due on February 25th.', timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), isMe: false, type: 'system' },
-          { id: 5, sender: 'Jean Bokete', message: 'Perfect! Looking forward to this journey with you all 🚀', timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), isMe: false, type: 'message' },
-          { id: 6, sender: 'Admin', message: '💰 Payment received from Jean Bokete - 12,500 XAF', timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), isMe: false, type: 'notification' },
-          { id: 7, sender: 'You', message: 'Great! Just made my payment too ✅', timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), isMe: true, type: 'message' },
-          { id: 8, sender: 'Marie Nkulu', message: 'Payment confirmed on my side as well! 💰', timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), isMe: false, type: 'message' },
-          { id: 9, sender: 'Admin', message: '🎉 All payments received for this month!', timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), isMe: false, type: 'notification' }
-        ]
-      });
-    }
+      // Process goals
+      if (goalsRes.success && goalsRes.data) {
+        setUserGoals(goalsRes.data);
+      }
 
-    if (supportTickets.length === 0) {
-      setSupportTickets([
-        { id: 1, subject: 'Payment not reflecting', category: 'Payment Issue', status: 'open', priority: 'high', createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), messages: [
-          { id: 1, sender: 'You', message: 'I made a payment 2 hours ago but it\'s not showing.', timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), isMe: true },
-          { id: 2, sender: 'Support Agent', message: 'Hello! I\'m looking into your payment right now.', timestamp: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString(), isMe: false },
-          { id: 3, sender: 'You', message: 'I used Mobile Money - Airtel Money', timestamp: new Date(Date.now() - 1.3 * 60 * 60 * 1000).toISOString(), isMe: true },
-          { id: 4, sender: 'Support Agent', message: 'It should reflect within the next 30 minutes.', timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), isMe: false }
-        ]},
-        { id: 2, subject: 'How to invite more members?', category: 'General Question', status: 'resolved', priority: 'low', createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), messages: [
-          { id: 1, sender: 'You', message: 'How can I invite more members to my group?', timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), isMe: true },
-          { id: 2, sender: 'Support Agent', message: 'Go to your group details > Share Invitation > Share the code!', timestamp: new Date(Date.now() - 4.8 * 24 * 60 * 60 * 1000).toISOString(), isMe: false },
-          { id: 3, sender: 'You', message: 'Perfect! Thank you!', timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), isMe: true }
-        ]}
-      ]);
-    }
+      // Process transactions
+      if (transactionsRes.success && transactionsRes.data) {
+        setTransactions(transactionsRes.data);
+      }
 
-    if (securityLogs.length === 0) {
-      setSecurityLogs([
-        { id: 1, action: 'Login', device: 'iPhone 13', location: 'Brazzaville, CG', timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), status: 'success', ip: '197.214.xxx.xxx' },
-        { id: 2, action: 'Payment', device: 'iPhone 13', location: 'Brazzaville, CG', timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), status: 'success', ip: '197.214.xxx.xxx' },
-        { id: 3, action: 'Password Change', device: 'iPhone 13', location: 'Brazzaville, CG', timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), status: 'success', ip: '197.214.xxx.xxx' },
-        { id: 4, action: 'Failed Login', device: 'Unknown Device', location: 'Kinshasa, CD', timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), status: 'failed', ip: '41.242.xxx.xxx' }
-      ]);
-    }
+      // Process notifications
+      if (notificationsRes.success && notificationsRes.data) {
+        setNotifications(notificationsRes.data);
+      }
 
-    if (liveChatMessages.length === 0) {
-      setLiveChatMessages([
-        { id: 1, sender: 'Support Bot', message: 'Hello! 👋 Welcome to Kolo Tontine support. How can I help you today?', timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(), isMe: false, type: 'bot' }
-      ]);
+      // Process support tickets
+      if (supportTicketsRes.success && supportTicketsRes.data) {
+        setSupportTickets(supportTicketsRes.data);
+      }
+
+      // Update user info from context
+      if (user.firstName) setFirstName(user.firstName);
+      if (user.lastName) setLastName(user.lastName);
+      if (user.email) setEmail(user.email);
+      if (user.phone) setPhone(user.phone);
+
+    } catch (err: any) {
+      console.error('Error fetching user data:', err);
+      setError(err.message || 'Failed to load data');
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [user]);
+
+  // Fetch data when user logs in
+  useEffect(() => {
+    if (user) {
+      fetchUserData();
+    }
+  }, [user, fetchUserData]);
 
   // Helper functions
   const getPlanLimits = useCallback((tier: string) => {
@@ -405,10 +402,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 1500);
   }, [liveChatMessage]);
 
-  const createNewTicket = useCallback((subject: string, category: string, message: string) => {
+  const createNewTicket = useCallback(async (subject: string, category: string, message: string) => {
     if (!subject.trim() || !category || !message.trim()) { alert('Please fill in all fields'); return; }
-    const newTicket = { id: Date.now(), subject, category, status: 'open', priority: 'medium', createdAt: new Date().toISOString(), messages: [{ id: 1, sender: 'You', message, timestamp: new Date().toISOString(), isMe: true }] };
-    setSupportTickets(prev => [newTicket, ...prev]);
+    try {
+      await supportService.createTicket({ subject, category, message, priority: 'medium' });
+      // Refresh support tickets
+      const response = await supportService.getTickets();
+      if (response.success && response.data) {
+        setSupportTickets(response.data);
+      }
+    } catch (error: any) {
+      console.error('Error creating support ticket:', error);
+      alert(error.message || 'Failed to create support ticket. Please try again.');
+    }
   }, []);
 
   const sendSupportMessage = useCallback((ticketId: any) => {
@@ -443,7 +449,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     sendLiveChatMessage, createNewTicket, sendSupportMessage, sendMessage,
     chatMessage, setChatMessage,
     securityLogs, biometricsEnabled, setBiometricsEnabled, twoFactorEnabled, setTwoFactorEnabled, loginAlerts, setLoginAlerts,
-    copied, setCopied, handleCopyCode, copyToClipboard
+    copied, setCopied, handleCopyCode, copyToClipboard,
+    loading, error, refreshData: fetchUserData
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

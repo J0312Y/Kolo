@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon, MoreVertical, Send, Smile } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon, MoreVertical, Send, Smile, LogOut } from 'lucide-react';
 import { useAuth } from '../context';
 import { useApp } from '../context';
 
@@ -22,6 +22,7 @@ export const Profile: React.FC = () => {
   const [newTicketSubject, setNewTicketSubject] = React.useState('');
   const [newTicketCategory, setNewTicketCategory] = React.useState('');
   const liveChatInputRef = React.useRef(null);
+  const supportTicketInputRef = React.useRef<HTMLInputElement>(null);
   const [newTicketMessage, setNewTicketMessage] = React.useState('');
 
   const createNewTicket = () => {
@@ -101,7 +102,7 @@ export const Profile: React.FC = () => {
           >
             <div className="flex items-center space-x-3">
               <User className="text-blue-600" size={24} />
-              <span className="font-semibold text-gray-900">{t('personalInfo')}</span>
+              <span className="font-semibold text-gray-900">Personal Information</span>
             </div>
             <ChevronRight className="text-gray-400" size={24} />
           </button>
@@ -123,7 +124,7 @@ export const Profile: React.FC = () => {
           >
             <div className="flex items-center space-x-3">
               <MapPin className="text-blue-600" size={24} />
-              <span className="font-semibold text-gray-900">{t('manageAddresses')}</span>
+              <span className="font-semibold text-gray-900">Manage Addresses</span>
             </div>
             <ChevronRight className="text-gray-400" size={24} />
           </button>
@@ -145,13 +146,13 @@ export const Profile: React.FC = () => {
           >
             <div className="flex items-center space-x-3">
               <UserPlus className="text-blue-600" size={24} />
-              <span className="font-semibold text-gray-900">{t('inviteFriends')}</span>
+              <span className="font-semibold text-gray-900">Invite Friends</span>
             </div>
             <ChevronRight className="text-gray-400" size={24} />
           </button>
         </div>
 
-        <h3 className="text-gray-900 font-bold text-lg mb-4">{t('security')}</h3>
+        <h3 className="text-gray-900 font-bold text-lg mb-4">Security</h3>
         <div className="bg-white rounded-3xl p-4 mb-6 shadow-sm">
           <button 
             onClick={() => setSubScreen('security-settings')}
@@ -159,7 +160,7 @@ export const Profile: React.FC = () => {
           >
             <div className="flex items-center space-x-3">
               <Shield className="text-blue-600" size={24} />
-              <span className="font-semibold text-gray-900">{t('security')}</span>
+              <span className="font-semibold text-gray-900">Security</span>
             </div>
             <ChevronRight className="text-gray-400" size={24} />
           </button>
@@ -487,13 +488,13 @@ export const Profile: React.FC = () => {
         <button onClick={() => navigate('/profile')}>
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-xl font-bold">{t('language')}</h1>
+        <h1 className="text-xl font-bold">Language</h1>
         <div className="w-6"></div>
       </div>
 
       <div className="flex-1 overflow-y-auto pb-24">
         <div className="px-6 py-6">
-          <p className="text-gray-600 mb-6">{t('chooseLanguage')}</p>
+          <p className="text-gray-600 mb-6">Choose your preferred language</p>
 
           <div className="space-y-3">
             {/* English */}
@@ -554,9 +555,9 @@ export const Profile: React.FC = () => {
             <div className="flex items-start space-x-3">
               <Globe className="text-blue-600 flex-shrink-0" size={24} />
               <div>
-                <h4 className="font-bold text-gray-900 mb-1">{t('languageChange')}</h4>
+                <h4 className="font-bold text-gray-900 mb-1">Language Changed</h4>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  {t('languageChangeDesc')}
+                  Your language preference has been updated
                 </p>
               </div>
             </div>
