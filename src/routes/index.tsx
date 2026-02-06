@@ -1,20 +1,32 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context';
-import { Home, Circles, Wallet, Card, Profile, Login, Register, VerifyEmail } from '../pages';
+import { Home, Circles, Wallet, Card, Profile, Login, Register, VerifyEmail, Splash, Onboarding } from '../pages';
 import { Goals } from '../pages/Goals';
 import { BottomNavigation } from '../components/layout';
 import { Tab } from '../types';
+
+// Component to handle initial redirect
+const InitialRedirect: React.FC = () => {
+  const hasSeenSplash = sessionStorage.getItem('hasSeenSplash');
+
+  if (!hasSeenSplash) {
+    sessionStorage.setItem('hasSeenSplash', 'true');
+    return <Navigate to="/splash" replace />;
+  }
+
+  return <Navigate to="/login" replace />;
+};
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-700">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
+          <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white text-lg">Chargement...</p>
         </div>
       </div>
     );
@@ -70,9 +82,20 @@ export const AppRoutes: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<InitialRedirect />} />
+        <Route path="/splash" element={<Splash />} />
+        <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/*"
           element={

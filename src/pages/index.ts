@@ -7,3 +7,5 @@ export { Goals } from './Goals';
 export { Login } from './Login';
 export { Register } from './Register';
 export { VerifyEmail } from './VerifyEmail';
+export { Splash } from './Splash';
+export { Onboarding } from './Onboarding';
