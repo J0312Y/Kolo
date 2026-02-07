@@ -89,7 +89,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route
-          path="/home"
+          path="/home/*"
           element={
             <ProtectedRoute>
               <AppLayout />
