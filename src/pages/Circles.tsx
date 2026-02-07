@@ -2373,7 +2373,7 @@ export const Circles: React.FC = () => {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Wallet className="text-blue-600" size={28} />
+                  <WalletIcon className="text-blue-600" size={28} />
                   <div>
                     <h3 className="font-bold text-gray-900 text-xl">Digital Wallets</h3>
                     <p className="text-gray-600 text-sm">Receive your payout on any digital wallet</p>
