@@ -249,7 +249,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const [circlesRes, goalsRes, transactionsRes, notificationsRes, supportTicketsRes] = await Promise.all([
         circlesService.getMyCircles().catch(() => ({ success: false, data: [] })),
         goalsService.getGoals().catch(() => ({ success: false, data: [] })),
-        transactionsService.getAll().catch(() => ({ success: false, data: [] })),
+        transactionsService.getTransactions().catch(() => ({ success: false, data: [] })),
         notificationsService.getAll().catch(() => ({ success: false, data: [] })),
         supportService.getTickets().catch(() => ({ success: false, data: [] }))
       ]);
