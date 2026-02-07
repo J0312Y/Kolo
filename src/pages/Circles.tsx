@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon, MoreVertical, Smile, Send } from 'lucide-react';
 import { useApp } from '../context';
