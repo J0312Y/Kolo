@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Bell, Zap, Copy, Check, Users, Gift, TrendingUp, PlusCircle, CreditCard, X, User, Search, Settings, FileText, Calendar, File, MessageCircle, MapPin, Shield, Lock, Globe, Folder, UserPlus, CheckCircle2, Scissors, Wallet as WalletIcon, MoreVertical, Smile, Send } from 'lucide-react';
 import { useApp } from '../context';
@@ -2373,7 +2373,7 @@ export const Circles: React.FC = () => {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Wallet className="text-blue-600" size={28} />
+                  <WalletIcon className="text-blue-600" size={28} />
                   <div>
                     <h3 className="font-bold text-gray-900 text-xl">Digital Wallets</h3>
                     <p className="text-gray-600 text-sm">Receive your payout on any digital wallet</p>
