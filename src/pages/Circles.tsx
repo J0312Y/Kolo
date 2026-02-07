@@ -3898,7 +3898,7 @@ export const Circles: React.FC = () => {
         payoutMethod: selectedPayoutMethod || 'digital'
       };
 
-      setActiveLikeLemba([...activeLikeLemba, newCircle]);
+      addLikeLemba(newCircle);
 
       // Clear form data
       setCircleAmount('');
