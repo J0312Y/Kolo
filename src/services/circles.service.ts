@@ -43,9 +43,10 @@ export interface CreateLikeLembaData {
   name: string;
   description: string;
   contribution_amount: number;
-  frequency: 'daily' | 'weekly' | 'monthly';
+  duration_months: number;
+  frequency?: 'daily' | 'weekly' | 'monthly';
   total_slots: number;
-  visibility: 'public' | 'private';
+  is_private?: boolean;
   auto_start?: boolean;
 }
 

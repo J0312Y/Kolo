@@ -3437,9 +3437,10 @@ export const Circles: React.FC = () => {
                 name: likeLembaName,
                 description: likeLembaDescription,
                 contribution_amount: parseInt(likeLembaAmount),
+                duration_months: likeLembaDuration?.months || 12,
                 frequency: 'monthly',
-                total_slots: parseInt(likeLembaMembers),
-                visibility: 'private',
+                total_slots: parseInt(likeLembaMembers.toString()),
+                is_private: true,
                 auto_start: true
               });
 
